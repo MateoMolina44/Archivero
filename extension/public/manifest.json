@@ -1,16 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Archivero",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Guardá inspiraciones (imágenes, links, textos, videos, herramientas) y se organizan solas según tus reglas.",
   "permissions": ["contextMenus", "activeTab", "scripting", "storage", "unlimitedStorage"],
   "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "background.js", "type": "module" },
   "action": {
     "default_title": "Archivero",
-    "default_popup": "popup.html",
     "default_icon": { "16": "icons/archivero-16.png", "32": "icons/archivero-32.png", "48": "icons/archivero-48.png", "128": "icons/archivero-128.png" }
   },
+  "web_accessible_resources": [
+    { "resources": ["popup.html", "popup.js", "popup-theme.js", "popup-arrow.svg", "assets/*", "chunks/*"], "matches": ["<all_urls>"] }
+  ],
   "commands": {
     "save-page": {
       "suggested_key": { "default": "Alt+Shift+S" },

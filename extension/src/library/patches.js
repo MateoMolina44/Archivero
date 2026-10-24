@@ -8,6 +8,7 @@ import { applyRules, mergeTags } from '../core/rules.js';
 import { embedOf, SPOTIFY_W, SPOTIFY_H } from '../core/embeds.js';
 import { mosaicBox, packMosaic, clampPan } from './mosaic.js';
 import { previewMeta, fetchBlob } from '../core/pagemeta.js';
+import { patchSearchTemplate, searchVals } from './search.js';
 
 const UNSORTED = 'Sin clasificar';
 
@@ -74,7 +75,8 @@ const TEMPLATE_PATCHES = {
   ],
   Main1: [['\n      </div>\n      <div class="dark"', (m) => FULL_FRAME + m]],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
-  Anotador: [['scale({{fs}})', () => 'scale({{stageScale}})']],
+  // También pasa la compensación para que el buscador y la botonera no se escalen (overrides.css).
+  Anotador: [['scale({{fs}})', () => 'scale({{stageScale}});--ui-k:{{uiK}};--ui-y:{{uiY}}px']],
 };
 const FICHA_ANCHOR = '<sc-if value="{{pe.isLink}}" hint-placeholder-val="{{false}}">';
 
@@ -98,7 +100,7 @@ function patchTemplate(name, template) {
     }
     template = template.split(find).join(make(find));
   }
-  return template;
+  return patchSearchTemplate(name, template);
 }
 
 // ---------- vistas previas de enlaces ----------
@@ -235,8 +237,9 @@ function patchClass(name, Component) {
     }
     const vals = renderVals.call(this);
 
-    // Buscador: sin la animación de escritura ni el brillo.
+    // Buscador: sin la animación de escritura ni el brillo, y con búsqueda real (search.js).
     if (vals.s) vals.s = { t: 'Buscar…', c: false };
+    searchVals(this, name, vals);
 
     // Ficha completa: botón "Ir al sitio" cuando la pieza tiene la dirección de origen.
     if (vals.pe) { vals.pe.goHref = vals.pe.url || ''; vals.pe.goOn = /^https?:\/\//.test(vals.pe.goHref); }
@@ -304,7 +307,21 @@ function patchClass(name, Component) {
     }
 
     if (name === 'Anotador') {
-      vals.stageScale = this.state.fs || 1;
+      // El escenario de 1440×900 se escala para entrar en la ventana. (stageFit del diseño no
+      // llegaba a aplicar la escala y quedaba siempre en 1, recortado en ventanas chicas.)
+      // El buscador y la botonera viven dentro del escenario: se compensa la escala para que
+      // tengan el mismo tamaño y la misma distancia a los bordes de la ventana que en las demás vistas.
+      const VW = window.innerWidth || 1440, VH = window.innerHeight || 900;
+      const k = Math.min(VW / 1440, VH / 900) || 1;
+      vals.stageScale = k.toFixed(4);
+      // Se compensa con zoom (y no transform, que usan sus animaciones); con zoom las distancias
+      // también se multiplican, por eso uiY va en px "antes del zoom".
+      vals.uiK = (1 / k).toFixed(4);
+      vals.uiY = (450 * k - VH / 2 + 20).toFixed(2);
+      if (!this._fitResize) {
+        this._fitResize = () => { if (this._dead) window.removeEventListener('resize', this._fitResize); else this.forceUpdate(); };
+        window.addEventListener('resize', this._fitResize);
+      }
       // La capa de la nota abierta se escondía solo con opacidad y desenfoque: quedaba "fantasma"
       // (borrosa) mientras cambiaba de estado. Ahora también se oculta del todo.
       if (vals.bookLyr) {

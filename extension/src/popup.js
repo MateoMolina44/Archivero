@@ -1,10 +1,21 @@
 import * as settings from './core/settings.js';
-import './popup-fonts.js';
+// Las 5 tipografías de Apariencia, por si el usuario eligió otra que no sea Inter.
+import './library/fonts.js';
 
 const $ = (id) => document.getElementById(id);
 const board = $('board');
 const status = $('status');
 const UNSORTED = 'Sin clasificar';
+
+// Como panel flotante (popup.html?frame, ver togglePanel en background.js) el popup vive en un
+// iframe dentro de la página: avisa su alto y pide cerrarse o guardar con mensajes a la página.
+const FRAME = new URLSearchParams(location.search).has('frame');
+const tell = (msg) => window.parent.postMessage(msg, '*');
+const close = () => (FRAME ? tell({ archivero: 'close' }) : window.close());
+if (FRAME) {
+  new ResizeObserver(() => tell({ archivero: 'size', h: document.body.getBoundingClientRect().height })).observe(document.body);
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+}
 
 async function render() {
   const s = await settings.load();
@@ -40,15 +51,17 @@ inlineCreate($('new-board'), $('board-row'), $('board-name'), $('board-ok'), asy
 });
 
 $('save-page').addEventListener('click', async () => {
+  // La página guarda después de cerrar el panel; el aviso al guardar confirma.
+  if (FRAME) return tell({ archivero: 'save' });
   status.textContent = 'Guardando…';
   const res = await chrome.runtime.sendMessage({ type: 'save-current-page' });
   status.textContent = res?.ok ? 'Página guardada' : 'No se pudo guardar: ' + (res?.error || 'error');
-  if (res?.ok) setTimeout(() => window.close(), 700);
+  if (res?.ok) setTimeout(close, 700);
 });
 
 $('open-library').addEventListener('click', () => {
   chrome.tabs.create({ url: chrome.runtime.getURL('library.html') });
-  window.close();
+  close();
 });
 
 render();

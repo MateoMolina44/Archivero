@@ -4,27 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Archivero</title>
+    <!-- Colores y tipografías de Apariencia antes de pintar (en MV3 no se permiten scripts inline). -->
+    <script src="/popup-theme.js"></script>
     <link rel="stylesheet" href="/src/popup.css" />
   </head>
   <body>
     <h1>Archivero</h1>
-    <p class="sub">Guardá lo que veas, se ordena solo.</p>
+    <p class="sub">Guardá img, links, etc. Se ordena solo.</p>
 
     <label for="board">Guardar en</label>
     <div class="row">
-      <select id="board"></select>
+      <span class="sel">
+        <select id="board"></select>
+        <span class="arrow" aria-hidden="true"><img src="/popup-arrow.svg" alt="" /></span>
+      </span>
       <button id="new-board" class="sq" aria-label="Crear tablero">+</button>
     </div>
     <div class="row" id="board-row" hidden>
       <input id="board-name" type="text" placeholder="Nombre del tablero" maxlength="40" />
-      <button id="board-ok" class="sq ok" aria-label="Crear tablero">✓</button>
+      <button id="board-ok" class="sq" aria-label="Crear tablero">✓</button>
     </div>
-    <p id="board-hint" class="hint" hidden>Todavía no tenés tableros. Creá uno con + para elegir dónde se guarda.</p>
+    <p id="board-hint" class="hint" hidden>Todavía no tenés tableros. Creá uno con + para elegir dónde se guardan tus elementos.</p>
 
     <button id="save-page" class="pill">Guardar esta página</button>
-    <button id="open-library" class="pill o">Abrir mi librería</button>
+    <button id="open-library" class="pill o">Abrir mi archivero</button>
     <p id="status" role="status"></p>
-    <p class="foot">Atajo: Alt+Shift+S · clic derecho sobre imágenes y texto</p>
+    <p class="foot">Atajo: Alt + Shift + S - Click Der sobre imagenes y texto</p>
     <script type="module" src="/src/popup.js"></script>
   </body>
 </html>
