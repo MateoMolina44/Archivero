@@ -7,4 +7,4 @@ Librería personal de inspiraciones + extensión de Chrome que guarda cosas de l
 - `CLAUDE.md`: contexto y decisiones del diseño.
 - `PUBLICAR_EN_CHROME.md`: guía para publicar la extensión en Chrome Web Store.
 
-Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` (config en `vercel.json`).
+Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` de https://github.com/MateoMolina44/archivero (config en `vercel.json`).
