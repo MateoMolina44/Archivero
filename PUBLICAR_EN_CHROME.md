@@ -28,15 +28,15 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
   > • Mosaico infinito para recorrer todo lo guardado y vista de pantalla completa.
   > • Anotador para dibujar, pegar imágenes y escribir notas.
   > • Temas claros y oscuros con 12 paletas y 5 tipografías.
-  > • Todo queda en tu navegador: sin cuentas, sin servidores, sin publicidad. Exportá una copia cuando quieras.
+  > • Todo queda en tu navegador, sin cuenta obligatoria y sin publicidad. Si querés, iniciá sesión con Google para sincronizar tu librería entre computadoras.
 
 - **Otros idiomas:** el nombre y la descripción corta ya vienen traducidos en el paquete (`extension/public/_locales`: español, inglés y portugués). Chrome y la tienda muestran la del idioma de cada usuario, y la extensión usa el español si el idioma no es ninguno de esos. En la ficha podés agregar **Inglés** y **Portugués (Brasil)** con **Agregar idioma** y pegar:
 
   > **EN:** Archivero is your personal inspiration library. Save images, videos, links and text from any page with right-click or Alt+Shift+S, and they sort themselves into boards by your rules (by site, keywords or content type).
-  > • Gallery-style boards, an editable card for every piece and automatic tags by site. • Infinite mosaic and a fullscreen slideshow. • Notebook to draw, paste images and write notes. • Light and dark themes with 12 palettes, 5 typefaces and 3 languages. • Everything stays in your browser: no accounts, no servers, no ads. Export a backup whenever you want.
+  > • Gallery-style boards, an editable card for every piece and automatic tags by site. • Infinite mosaic and a fullscreen slideshow. • Notebook to draw, paste images and write notes. • Light and dark themes with 12 palettes, 5 typefaces and 3 languages. • Everything stays in your browser, no account needed and no ads. Optionally, sign in with Google to sync your library across computers.
 
   > **PT:** O Archivero é a sua biblioteca pessoal de inspirações. Salve imagens, vídeos, links e textos de qualquer página com o clique direito ou Alt+Shift+S, e eles se organizam sozinhos em quadros pelas suas regras (por site, palavras-chave ou tipo de conteúdo).
-  > • Quadros em estilo galeria, ficha editável para cada peça e etiquetas automáticas pelo site. • Mosaico infinito e apresentação em tela cheia. • Anotações para desenhar, colar imagens e escrever. • Temas claros e escuros com 12 paletas, 5 tipografias e 3 idiomas. • Tudo fica no seu navegador: sem contas, sem servidores, sem publicidade. Exporte uma cópia quando quiser.
+  > • Quadros em estilo galeria, ficha editável para cada peça e etiquetas automáticas pelo site. • Mosaico infinito e apresentação em tela cheia. • Anotações para desenhar, colar imagens e escrever. • Temas claros e escuros com 12 paletas, 5 tipografias e 3 idiomas. • Tudo fica no seu navegador, sem conta obrigatória e sem publicidade. Se quiser, entre com o Google para sincronizar sua biblioteca entre computadores.
 
 - **Ícono de la tienda:** 128×128 → `extension/public/icons/archivero-128.png`.
 - **Capturas:** al menos 1, ideal 3–5, de **1280×800** (o 640×400), PNG o JPG. Sugeridas: tablero con piezas, mosaico principal, Reglas y ajustes, popup + aviso. Si querés te las saco yo desde el navegador con datos de ejemplo.
@@ -52,10 +52,11 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
   - `scripting`: lee el título y la descripción de la página que se guarda y muestra en ella el aviso para corregir tablero y etiquetas.
   - `storage`: guarda reglas, tableros y preferencias, compartidos entre el popup, el aviso y la librería.
   - `unlimitedStorage`: las imágenes y videos guardados se almacenan localmente en IndexedDB y pueden superar el límite estándar.
+  - `identity`: abre la ventana de inicio de sesión con Google cuando el usuario elige sincronizar su librería en la nube (opcional).
   - Permiso de host `<all_urls>`: el usuario puede guardar contenido de cualquier sitio; hace falta para descargar la imagen o el video elegido y mostrar el aviso en esa página. Solo actúa cuando el usuario guarda algo.
 
 - **¿Usás código remoto?** → **No.** (Todo, incluidas las tipografías, va dentro del paquete.)
-- **Uso de datos:** marcá **Contenido del sitio web** (lo que el usuario elige guardar). No marques las demás categorías.
+- **Uso de datos:** marcá **Contenido del sitio web** (lo que el usuario elige guardar) e **Información de identificación personal** (nombre y email, solo si inicia sesión para usar la nube). No marques las demás categorías.
 - Marcá las tres certificaciones: no se venden datos, no se usan para fines ajenos al propósito único, no se usan para créditos.
 - **URL de la política de privacidad:** `https://archivero-green.vercel.app/privacidad.html` Antes de publicar podés completar el contacto en `extension/privacidad.html`.
 

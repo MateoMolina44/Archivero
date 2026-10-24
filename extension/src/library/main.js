@@ -10,7 +10,8 @@ import * as Anotador from '../screens/Anotador.js';
 import * as Seleccion from '../screens/Seleccion.js';
 import { prepareScreen } from './patches.js';
 import { drain } from './ingest.js';
-import { loadNotes, attachNotes, detachNotes } from './notes.js';
+import { loadNotes, attachNotes, detachNotes, onNotesSaved } from './notes.js';
+import { startCloud, attachCloud, schedule as cloudSync } from './cloud.js';
 import * as settings from '../core/settings.js';
 import { onChange } from '../core/db.js';
 import { translate, localizeTemplate, uiLang, trackMissing } from '../core/i18n.js';
@@ -77,15 +78,18 @@ function show(route) {
   inst.commit = function () {
     this._dirty = true;
     syncBoards(this);
+    cloudSync();
     return commit.apply(this, arguments);
   };
   const commitNow = inst.commitNow;
   inst.commitNow = function () {
     syncBoards(this);
+    cloudSync();
     return commitNow.apply(this, arguments);
   };
   if (init) init(inst);
   current = inst;
+  attachCloud(inst);
   start(inst);
   if (after) after(inst);
   syncBoards(inst);
@@ -142,4 +146,9 @@ settings.onChange(() => {
   current.forceUpdate();
 });
 
-Promise.all([settings.load(), loadNotes()]).then(() => show(routeFromHash()));
+onNotesSaved(() => cloudSync());
+
+Promise.all([settings.load(), loadNotes()]).then(() => {
+  show(routeFromHash());
+  startCloud().catch((e) => console.warn('[Archivero] Nube no disponible', e));
+});

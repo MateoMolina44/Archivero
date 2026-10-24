@@ -2,7 +2,7 @@
 
 Your personal inspiration library. Save images, videos, links and text from any web page with a right-click (or `Alt+Shift+S`), and Archivero files them into boards by itself, following your own rules.
 
-Everything stays in your browser: no accounts, no servers, no ads.
+Everything stays in your browser, no account needed and no ads. If you want, sign in with Google to sync your library across computers.
 
 ![Infinite mosaic](docs/screenshots/1-mosaic.png)
 
@@ -20,6 +20,7 @@ Everything stays in your browser: no accounts, no servers, no ads.
 - **Infinite mosaic** of everything you saved, and a **fullscreen** slideshow.
 - **Notebook** to draw, paste images and write notes.
 - **Appearance:** light and dark themes, 12 palettes, 5 typefaces and 3 languages (English, Spanish, Portuguese).
+- **Optional cloud sync:** sign in with Google to keep the same library in the extension, the web version and your other computers.
 - **Local backup:** export your whole library (pieces, boards and notes) to a `.json` file and restore it whenever you want.
 
 ![Dark theme](docs/screenshots/6-mosaic-dark.png)
@@ -62,10 +63,10 @@ Then follow steps 3–6 above and choose the `extension/dist` folder.
 
 ## Good to know
 
-- Your library lives in the browser profile where you installed the extension. It doesn't sync between devices: use Export/Import to move it.
+- Without signing in, your library lives in the browser profile where you installed the extension. Sign in (Rules and settings → Cloud and backup) to sync it, or use Export/Import to move it.
 - Browsers don't let extensions run on some pages (`chrome://` pages, the Chrome Web Store, the new tab page), so you can't save from those.
 - Some sites block link previews; those links are saved as a plain card.
-- The web version at https://archivero-green.vercel.app shows the library only: it can't save from other pages and doesn't share data with the extension.
+- The web version at https://archivero-green.vercel.app can't save from other pages; sign in with the same Google account to see the library you saved with the extension.
 
 ## Project structure
 

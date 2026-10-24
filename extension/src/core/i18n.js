@@ -67,6 +67,13 @@ Nube y copia local|Cloud and local backup|Nuvem e cópia local
 Tu librería se guarda en la nube para abrirla desde cualquier computadora. Además podés bajar una copia a este equipo y restaurarla cuando quieras.|Your library is saved in the cloud so you can open it from any computer. You can also download a backup to this device and restore it whenever you want.|Sua biblioteca fica salva na nuvem para abrir de qualquer computador. Você também pode baixar uma cópia neste dispositivo e restaurá-la quando quiser.
 Sincronizar en la nube|Sync to the cloud|Sincronizar na nuvem
 Sincronizar ahora|Sync now|Sincronizar agora
+Iniciar sesión con Google|Sign in with Google|Entrar com o Google
+Cerrar sesión|Sign out|Sair
+Sincronizando…|Syncing…|Sincronizando…
+Iniciá sesión con Google para usar tu librería en cualquier computadora.|Sign in with Google to use your library on any computer.|Entre com o Google para usar sua biblioteca em qualquer computador.
+Se sincronizan tus piezas, imágenes, tableros, notas, reglas y apariencia entre la extensión, la web y tus otras computadoras.|Your pieces, images, boards, notes, rules and appearance sync between the extension, the web and your other computers.|Suas peças, imagens, quadros, notas, regras e aparência são sincronizadas entre a extensão, a web e seus outros computadores.
+sin conexión.|you're offline.|sem conexão.
+Google no devolvió el código de acceso.|Google didn't return the access code.|O Google não devolveu o código de acesso.
 Maqueta: la cuenta en la nube se conecta en la app real. Ahora tenés|Mockup: the cloud account connects in the real app. Right now you have|Maquete: a conta na nuvem se conecta no app real. Agora você tem
 Copia local|Local backup|Cópia local
 Bajá una copia de tu librería a este equipo y restaurala cuando quieras.|Download a backup of your library to this device and restore it whenever you want.|Baixe uma cópia da sua biblioteca neste dispositivo e restaure quando quiser.
@@ -360,6 +367,14 @@ const PATTERNS = [
     'Backup ' + (m[1] === 'descargada' ? 'downloaded' : 'restored') + ': ' + m[2] + ' pieces, ' + m[3] + ' boards and ' + m[4] + ' notes.',
     'Cópia ' + (m[1] === 'descargada' ? 'baixada' : 'restaurada') + ': ' + m[2] + ' peças, ' + m[3] + ' quadros e ' + m[4] + ' notas.',
   ]],
+  [/^Conectada como (.*)$/, (m) => ['Signed in as ' + m[1], 'Conectado como ' + m[1]]],
+  [/^última sincronización (.*)$/, (m) => ['last synced ' + m[1], 'última sincronização ' + m[1]]],
+  [/^No se pudo sincronizar: (.*)$/, (m, t) => ["Couldn't sync: " + t(m[1]), 'Não foi possível sincronizar: ' + t(m[1])]],
+  [/^(Subiendo|Bajando) (imágenes|cambios) \((\d+) de (\d+)\)…$/, (m) => {
+    const up = m[1] === 'Subiendo', img = m[2] === 'imágenes';
+    return [(up ? 'Uploading ' : 'Downloading ') + (img ? 'images' : 'changes') + ' (' + m[3] + ' of ' + m[4] + ')…',
+      (up ? 'Enviando ' : 'Baixando ') + (img ? 'imagens' : 'alterações') + ' (' + m[3] + ' de ' + m[4] + ')…'];
+  }],
   [/^Tablero #(\d+)$/, (m) => ['Board #' + m[1], 'Quadro #' + m[1]]],
   [/^Buscar en (.*)…$/, (m, t) => ['Search ' + t(m[1]) + '…', 'Buscar em ' + t(m[1]) + '…']],
   [/^Tamaño en el tablero: (.*)$/, (m, t) => ['Size on the board: ' + t(m[1]), 'Tamanho no quadro: ' + t(m[1])]],

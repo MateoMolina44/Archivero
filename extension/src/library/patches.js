@@ -13,6 +13,7 @@ import { patchFullscreenTemplate, fullscreenVals } from './fullscreen.js';
 import { patchIntroTemplate, introVals } from './intro.js';
 import { LANGS } from '../core/i18n.js';
 import { notesBackup, restoreNotes, NOTES_KEY } from './notes.js';
+import { cloudVals, schedule as cloudSync } from './cloud.js';
 
 const UNSORTED = 'Sin clasificar';
 
@@ -131,17 +132,24 @@ function cut(name, template, from, to, withTo) {
 }
 
 // Partes del diseño que eran maquetas y en la extensión no hacen nada:
-// - "Sincronizar en la nube" (la nube no existe todavía): Nube y copia queda solo con la copia local.
+// - "Sincronizar en la nube": la fila de la maqueta (interruptor y aviso de maqueta) se cambia por la
+//   cuenta real (cloud.js): iniciar sesión con Google, sincronizar ahora y cerrar sesión.
 // - La herramienta "Captura de pantalla" del Anotador, que insertaba un rectángulo gris de ejemplo.
 // - En el mosaico, la pieza elevada con su resumen: tocar una pieza abre directamente la ficha.
 const CLOUD_ROW = '<div class="rz-r" style="cursor:default;max-width:620px">\n              <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">Sincronizar en la nube</span>';
 const LOCAL_TITLE = '<div style="font-size:14px;font-weight:700;margin-bottom:8px">Copia local</div>';
-const CLOUD_TEXT = 'Tu librería se guarda en la nube para abrirla desde cualquier computadora. Además podés bajar una copia a este equipo y restaurarla cuando quieras.';
+const CLOUD_ACCOUNT = `<div class="rz-r" style="cursor:default;max-width:620px;flex-wrap:wrap;row-gap:8px">
+              <span style="flex:1;min-width:220px"><span style="display:block;font-size:14px;font-weight:600">Sincronizar en la nube</span><span style="display:block;font-size:12px;opacity:.85;margin-top:2px">{{cl.status}}</span></span>
+              <sc-if value="{{cl.out}}" hint-placeholder-val="{{false}}"><button class="rz-b s" onClick="{{cl.signIn}}" style="height:30px">Iniciar sesión con Google</button></sc-if>
+              <sc-if value="{{cl.in}}" hint-placeholder-val="{{false}}"><button class="rz-b o s" onClick="{{cl.sync}}" style="height:30px">Sincronizar ahora</button><button class="rz-b o s" onClick="{{cl.signOut}}" style="height:30px">Cerrar sesión</button></sc-if>
+            </div>
+            <div style="font-size:12px;opacity:.75;margin:8px 0 22px;max-width:620px">Se sincronizan tus piezas, imágenes, tableros, notas, reglas y apariencia entre la extensión, la web y tus otras computadoras.</div>
+            `;
 function cutMockups(name, template) {
   if (template.includes(CLOUD_ROW)) {
-    template = cut(name, template, CLOUD_ROW, LOCAL_TITLE, true)
-      .replace('>Nube y copia local<', '>Copia local<')
-      .replace(CLOUD_TEXT, 'Bajá una copia de tu librería a este equipo y restaurala cuando quieras.');
+    const a = template.indexOf(CLOUD_ROW);
+    template = cut(name, template, CLOUD_ROW, LOCAL_TITLE, false);
+    template = template.slice(0, a) + CLOUD_ACCOUNT + template.slice(a);
   }
   if (name === 'Anotador') {
     template = cut(name, template, '<button onClick="{{tShot}}"', '</button>', true);
@@ -231,6 +239,16 @@ function patchClass(name, Component) {
     };
   }
 
+  // Notas con id único (el diseño las numeraba n1, n2…): con la nube, dos computadoras crearían la misma.
+  if (name === 'Anotador') {
+    const blank = proto.blank;
+    proto.blank = function (title) {
+      const nt = blank.call(this, title);
+      nt.id = 'n' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      return nt;
+    };
+  }
+
   if (name === 'Main') {
     proto.mchunk = function (its, VW, VH, G) {
       const key = its.map((i) => i.id + ':' + (i.ow || '') + 'x' + (i.oh || '')).join(',') + '|' + VW + 'x' + VH;
@@ -308,6 +326,7 @@ function patchClass(name, Component) {
       settings.save(patch);
       // El idioma cambia los textos fijos de la pantalla: main.js la vuelve a montar.
       if (lang !== before) window.dispatchEvent(new Event('archivero:lang'));
+      cloudSync();
     };
   }
 
@@ -434,12 +453,12 @@ function patchClass(name, Component) {
     if (snap !== this._rsaved) {
       this._rsaved = snap;
       settings.save({ rules: this.rules, rseq: this.rseq, projs: this.rprojs, prefs: this.rprefs, proj: this.state.rproj || 0 });
+      cloudSync();
     }
     // Proyectos: fuera de la barra lateral y de los tipos de condición.
     if (vals.rTabs) vals.rTabs = vals.rTabs.filter((t) => t.label !== 'Proyectos');
-    // Sin la nube (maqueta), la pestaña queda solo con la copia local; y la "copia automática en
-    // este equipo" era un interruptor sin función.
-    if (vals.rTabs) vals.rTabs.forEach((t) => { if (t.label === 'Nube y copia') t.label = 'Copia local'; });
+    // Cuenta en la nube (cloud.js). La "copia automática en este equipo" era un interruptor sin función.
+    vals.cl = cloudVals();
     if (vals.rPrefs) vals.rPrefs = vals.rPrefs.filter((o) => o.label !== 'Guardar también una copia automática en este equipo');
     if (vals.rTabs && vals.rt) {
       const on = this.state.rtab === 'creditos';

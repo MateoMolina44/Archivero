@@ -1,6 +1,6 @@
 # Archivero — contexto para seguir en Claude Code
 
-Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.3.8, 24/10/2026). Leelo entero antes de tocar código.
+Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.4.0, 24/10/2026). Leelo entero antes de tocar código.
 
 ## Quién y cómo
 - Usuario: Mateo (Rosario, Argentina). Escribe en **español rioplatense**: respondele en español rioplatense, claro y sin vueltas.
@@ -82,6 +82,13 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
   - Clic derecho sobre imagen, video, enlace, texto o página → "Guardar … en Archivero"; atajo Alt+Shift+S.
   - Aviso en la página al guardar: con el tema y el idioma, 2 s en pantalla (el mouse encima lo pausa), con "Cambiar" para corregir tablero y etiquetas.
 
+## Nube (Supabase, opcional)
+- `src/library/cloud.js`: inicio de sesión con Google y sincronización. Sin sesión, la app funciona igual que antes, todo local.
+- Tablas y reglas de acceso en `supabase/schema.sql` (tabla `entities`, una fila por pieza/tablero/nota/ajuste; bucket privado `media` para imágenes y videos, en `<user_id>/<clave>`).
+- Sincroniza al abrir, 4 s después de cada cambio, cada 2 minutos y al volver a la ventana. Gana lo local si cambió desde la última sincronización; si no, lo de la nube. Los tableros con el mismo nombre se juntan en el más antiguo.
+- En la extensión el inicio de sesión usa `chrome.identity` y vuelve a `https://hfekjnlbpinliclggobiencigmjoboki.chromiumapp.org/`: ese ID es fijo gracias a `key` en el manifest. Esa dirección tiene que estar en Supabase → Authentication → URL Configuration → Redirect URLs.
+- Las notas del Anotador tienen id único (`patches.js`), porque el diseño las numeraba y dos computadoras repetirían ids.
+
 ## Copia local
 - Exportar/Importar copia (Reglas y ajustes → Copia local) lleva la librería, los medios y las notas del Anotador (campo `notes`). Lo arma `backupExport`/`backupImport` en `patches.js`; una copia vieja sin `notes` no toca las notas actuales.
 
@@ -91,7 +98,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - La escritura letra por letra de "Buscar…" (Mateo la pidió sacar; el brillo se queda).
 
 ## Pendientes
-1. **Nube real:** no existe; se sacó la maqueta.
+1. **Nube:** falta probarla con dos computadoras y publicar la app de Google (hoy está en modo prueba).
 2. **Intro:** decidir si vuelve el cajón 3D.
 3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
 

@@ -9,6 +9,12 @@ let data = { notes: [], seq: 0, nsort: 'recent' };
 let saved = '';
 let timer = null;
 let inst = null;
+let onSaved = null;
+
+// Aviso de cada guardado (la nube lo usa para sincronizar).
+export function onNotesSaved(cb) {
+  onSaved = cb;
+}
 
 export async function loadNotes() {
   try {
@@ -29,6 +35,7 @@ function flush() {
   if (json === saved) return;
   saved = json;
   mediaPut(KEY, JSON.parse(json)).catch((e) => console.warn('[Archivero] No se pudieron guardar las notas', e));
+  if (onSaved) onSaved();
 }
 
 // Conecta una instancia nueva del Anotador con las notas guardadas.

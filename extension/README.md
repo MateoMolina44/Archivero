@@ -31,5 +31,5 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 `npm run preview` y abrir `http://localhost:5173/library.html`. Fuera de la extensión los ajustes usan localStorage.
 
 ## Pendiente
-- Nube real (se sacó la maqueta) y decidir si vuelve la intro con el cajón.
+- Nube: hecha (`src/library/cloud.js`, `supabase/schema.sql`); falta publicar la app de Google. Decidir si vuelve la intro con el cajón.
 - La librería React anterior quedó en `legacy/library-react/` (no se compila; se puede borrar).

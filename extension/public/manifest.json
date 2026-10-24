@@ -1,15 +1,17 @@
 {
   "manifest_version": 3,
   "name": "__MSG_appName__",
-  "version": "0.3.8",
+  "version": "0.4.0",
   "description": "__MSG_appDesc__",
   "default_locale": "es",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArby2yXKhQ3b6zbRGh1Bvx8fKokmMajGxHyWLM344faAuyVh0emeB5Lh7jdpHbhT6oia8oR/eg2KgzhA3GPvnrMfy3xut0hw8y7rnpKA5cnHooU+cIpMmIRzRYGFEdth7VoGaxjHnHg/OycF3aD4RhCEsB4PEIeTsto6GbKoKpLFkfGvZqEATCNK/ePm/Mf36vouM7hTxsIu2BvDzG7adQyB07Eu/dYNZR60cAH91vFzwPc/3YJe1Q8Q0N4P5/V4IbGnBMgMGbeNvzTQA0WyTbIkJPZ93Et1ZK/pxtmNK8eZk7XVpy3j0iF4w+URYWCGwtN13UL8Vpp779a2rz0jM0wIDAQAB",
   "permissions": [
     "contextMenus",
     "activeTab",
     "scripting",
     "storage",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "identity"
   ],
   "host_permissions": [
     "<all_urls>"
