@@ -1,7 +1,7 @@
 # Archivero
 
 Librería personal de inspiraciones + extensión de Chrome que guarda y organiza sola.
-Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con Exportar/Importar en Reglas y ajustes → Nube y copia.
+Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con Exportar/Importar en Reglas y ajustes → Copia local.
 
 ## Instalar
 1. `npm install` y `npm run build` (genera `dist/`).
@@ -20,7 +20,9 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 - `src/dc/runtime.js`: runtime de las plantillas del diseño (`{{…}}`, `<sc-for>`, `<sc-if>`), sin `eval` para cumplir la CSP de MV3.
 - `src/library/main.js`: una sola página que cambia de pantalla sin recargar (rutas `#/Main`, `#/Main1`, `#/Archivo`, `#/Tablero`, `#/Ajustes`, `#/Anotador`).
 - `src/library/patches.js`: lo que cambia respecto del prototipo, aplicado sobre las clases importadas:
-  medios en la IndexedDB compartida, reglas y preferencias persistentes y "Reaplicar a Sin clasificar" real.
+  medios en la IndexedDB compartida, reglas y preferencias persistentes, vistas previas reales, idioma, etc.
+  Suma `fullscreen.js` (pantalla completa), `search.js` (buscador), `mosaic.js` e `intro.js` (apagada).
+- `src/core/i18n.js`: idiomas (español, inglés, portugués). `public/_locales`: nombre y descripción de la extensión.
 - `src/library/ingest.js`: incorpora lo que guarda la extensión (bandeja `inbox` de IndexedDB) a la librería.
 - `src/background.js`: menús, atajo, reglas y aviso. `src/popup.*`: popup según `Extension.dc.html`.
 - `src/core/settings.js`: reglas, tablero elegido y preferencias en `chrome.storage.local` (compartido por todo).
@@ -30,5 +32,5 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 
 ## Pendiente
 - Las notas del Anotador se guardan en IndexedDB (`src/library/notes.js`), pero todavía no entran en Exportar/Importar copia.
-- Vistas previas reales de enlaces, nube real, logo en la intro, modo definitivo de pantalla completa.
+- Nube real (se sacó la maqueta) y decidir si vuelve la intro con el cajón.
 - La librería React anterior quedó en `legacy/library-react/` (no se compila; se puede borrar).

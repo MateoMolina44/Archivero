@@ -301,6 +301,11 @@ Buscar por color|Search by color|Buscar por cor
 Color en hexadecimal|Hex color|Cor em hexadecimal
 Sumar este color y elegir otro|Add this color and pick another|Adicionar esta cor e escolher outra
 Tipo de contenido|Content type|Tipo de conteúdo
+imagen|image|imagem
+enlace|link|link
+texto|text|texto
+video|video|vídeo
+captura|screenshot|captura
 Buscar en tableros…|Search boards…|Buscar nos quadros…
 Nombre (A–Z)|Name (A–Z)|Nome (A–Z)
 Título (A–Z)|Title (A–Z)|Título (A–Z)
@@ -360,7 +365,9 @@ const PATTERNS = [
   [/^Se quita de (.*)\. No se puede deshacer\.$/, (m, t) => ['It\'s removed from ' + t(m[1]) + '. This can\'t be undone.', 'É removida de ' + t(m[1]) + '. Não é possível desfazer.']],
   // Resumen de una regla: "dominio: x y palabras clave: y → Tablero · #tag".
   [/^(.*) → (.*?)( · #.*)?$/, (m, t) => {
-    const conds = (lang) => m[1].split(/ (y|o) /).map((p, i) => (i % 2 ? CONJ[lang][p] : p.replace(/^([^:]+): /, (x, k) => t(k[0].toUpperCase() + k.slice(1)).toLowerCase() + ': '))).join(' ');
+    // El valor del tipo de contenido ('captura', 'imagen'…) también se traduce; los demás son del usuario.
+    const cond = (p) => p.replace(/^([^:]+): (.*)$/, (x, k, v) => t(k[0].toUpperCase() + k.slice(1)).toLowerCase() + ': ' + (k === 'tipo de contenido' ? t(v) : v));
+    const conds = (lang) => m[1].split(/ (y|o) /).map((p, i) => (i % 2 ? CONJ[lang][p] : cond(p))).join(' ');
     return [conds('en') + ' → ' + t(m[2]) + (m[3] || ''), conds('pt') + ' → ' + t(m[2]) + (m[3] || '')];
   }],
 ];

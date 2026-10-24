@@ -83,6 +83,42 @@ export function onChange(cb) {
   }
 }
 
+// Reglas de ejemplo (las de DEFAULTS) en los tres idiomas de la interfaz. Mientras el usuario no
+// las cambie, al elegir otro idioma pasan a ese idioma: nombre, palabras clave y etiquetas.
+// (El valor del tipo, 'captura', es interno del motor de reglas y no se traduce.)
+const SAMPLE_RULES = {
+  r1: {
+    es: { name: 'Pinterest → Referencias', tags: 'referencia' },
+    en: { name: 'Pinterest → References', tags: 'reference' },
+    pt: { name: 'Pinterest → Referências', tags: 'referência' },
+  },
+  r2: {
+    es: { name: 'Paleta y color', kw: 'paleta, color, colores', tags: 'paleta' },
+    en: { name: 'Palette and color', kw: 'palette, color, colors', tags: 'palette' },
+    pt: { name: 'Paleta e cor', kw: 'paleta, cor, cores', tags: 'paleta' },
+  },
+  r4: {
+    es: { name: 'Capturas de pantalla', tags: 'captura' },
+    en: { name: 'Screenshots', tags: 'screenshot' },
+    pt: { name: 'Capturas de tela', tags: 'captura' },
+  },
+};
+
+const isSample = (r, v) => r.name === v.name && r.tags === v.tags && (!v.kw || r.conds.some((c) => c.k === 'kw' && c.v === v.kw));
+
+export function localizeRules(rules, lang) {
+  return rules.map((r) => {
+    const s = SAMPLE_RULES[r.id];
+    if (!s || !s[lang] || !Object.values(s).some((v) => isSample(r, v))) return r;
+    const t = s[lang];
+    return Object.assign({}, r, {
+      name: t.name,
+      tags: t.tags,
+      conds: t.kw ? r.conds.map((c) => (c.k === 'kw' ? Object.assign({}, c, { v: t.kw }) : c)) : r.conds,
+    });
+  });
+}
+
 export const activeProject = (s) => s.projs[s.proj] || '';
 export const pref = (s, i) => !!(s.prefs[i] && s.prefs[i].on);
 export const PREF_APPLY_RULES = 0;

@@ -300,9 +300,13 @@ function patchClass(name, Component) {
     proto.uiSet = function (p) {
       const before = this.ui().lang || 'es';
       uiSet.call(this, p);
-      settings.save({ ui: this.ui() });
+      const lang = this.ui().lang || 'es';
+      const patch = { ui: this.ui() };
+      // Las reglas de ejemplo que siguen sin tocar pasan al idioma nuevo.
+      if (lang !== before) patch.rules = settings.localizeRules(this.rules || settings.get().rules, lang);
+      settings.save(patch);
       // El idioma cambia los textos fijos de la pantalla: main.js la vuelve a montar.
-      if ((this.ui().lang || 'es') !== before) window.dispatchEvent(new Event('archivero:lang'));
+      if (lang !== before) window.dispatchEvent(new Event('archivero:lang'));
     };
   }
 

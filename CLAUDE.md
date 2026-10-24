@@ -1,124 +1,97 @@
 # Archivero — contexto para seguir en Claude Code
 
-Este archivo resume todo lo que se decidió durante el diseño en Claude Design (artefacto "Archivero - referencia visual", versión 41, 23/10/2026). Leelo entero antes de tocar código.
+Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.3.6, 24/10/2026). Leelo entero antes de tocar código.
 
 ## Quién y cómo
 - Usuario: Mateo (Rosario, Argentina). Escribe en **español rioplatense**: respondele en español rioplatense, claro y sin vueltas.
 - Forma de trabajo que pidió:
-  - Iterar con versiones cortas y ver resultados.
+  - Iterar con versiones cortas y ver resultados. Al cerrar una tanda suele pedir "commiteá como v0.x.y y subí la versión en package.json y manifest" (los dos: `extension/package.json` y `extension/public/manifest.json`), y después el push.
   - No mandar zips ni archivos intermedios hasta que algo esté terminado.
   - Cuando haya varias opciones de diseño, mostrarlas para que él elija; no decidir en silencio.
-- Referencia visual original: Figma `https://www.figma.com/design/WiVy15VitUHjYefBSmO9KB/Trabajo?node-id=2059-8` (Page 2: pantallas, "Frame Animacion 1–6" de la intro, barra de búsqueda, botón de sección).
+- Figma: `https://www.figma.com/design/WiVy15VitUHjYefBSmO9KB/Trabajo` — node `2059-8` (pantallas, "Frame Animacion 1–6" de la intro con el cajón, barra de búsqueda, botón de sección) y `2082-26` (popup de la extensión).
 
 ## Qué es
-Archivero = librería personal de inspiraciones (web) + extensión de Chrome que guarda cosas de la web y las organiza sola con reglas. Estilo Milanote/Pinterest/Cosmos, en grises de wireframe.
+Archivero = librería personal de inspiraciones (web) + extensión de Chrome que guarda cosas de la web y las organiza sola con reglas. Estilo Milanote/Pinterest/Cosmos. Todo es local (localStorage + IndexedDB + `chrome.storage.local`).
 
-## Carpetas de este paquete
-- `diseno/project/` — el diseño aprobado hasta ahora: archivos `.dc.html` (formato Claude Design: HTML + `<x-dc>` con `{{huecos}}`, `<sc-for>`, `<sc-if>` y una clase `Component extends DCLogic` con `renderVals()`). Son prototipos **funcionales** y son la fuente de verdad del comportamiento y del look. `canvas.json` es el índice del lienzo.
-- `diseno/generador/` — scripts Python que generan esos `.dc.html`. Ver la sección "Generador del diseño".
-- `extension/` — el proyecto de código real (Vite + extensión MV3) que quedó **en pausa** antes del rediseño. Su UI está desactualizada respecto del diseño; la lógica de guardado, reglas e IndexedDB sí sirve de base. Sin `node_modules`: corré `npm install`.
+## Carpetas
+- `diseno/project/` — el diseño original: archivos `.dc.html` (HTML + `<x-dc>` con `{{huecos}}`, `<sc-for>`, `<sc-if>` y una clase `Component extends DCLogic` con `renderVals()`). Son la base del marcado y del comportamiento; lo que cambió después vive en `extension/src/library/` (ver "Cómo está armado").
+- `diseno/generador/` — scripts Python que generan esos `.dc.html`. Ver "Generador del diseño".
+- `extension/` — la app real (Vite + extensión MV3). `npm install`, `npm run build` → `dist/` (extensión) y `npm run build:web` → `dist-web/` (web en Vercel). Detalles en `extension/README.md`.
+- `PUBLICAR_EN_CHROME.md` — guía para la Chrome Web Store (con las descripciones en ES/EN/PT).
+- Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` de https://github.com/MateoMolina44/archivero.
 
-## Paleta, tipografía y tema
-- Base en grises de wireframe:
-  - Fondo `#d9d9d9`.
-  - Piezas `#afafaf`, `#a7a7a7`, `#b7b7b7`, `#a3a3a3`.
-  - Pastillas y paneles `#575757` con texto blanco.
-  - Chips claros `#d9d9d9` con texto `#111`.
-  - Tipografía Inter.
-- Todo usa variables CSS. Se definen en la raíz de cada pantalla con `uiVars()`: `--bg --t1..--t4 --pill --pillh --chip --muted --field --sw --velo --ink --f1 --f2`.
-- Personalización (pestaña **Apariencia** en Reglas y ajustes):
+## Cómo está armado (extension/)
+- `src/screens/*.js`: copia generada de los `.dc.html` (`npm run import-design`). **No se editan a mano**: se volverían a pisar.
+- `src/library/patches.js`: todos los cambios respecto del diseño, aplicados sobre esas pantallas (reemplazos de texto en las plantillas y envoltorios de métodos de las clases). Ahí se suman los módulos:
+  - `fullscreen.js`: la pantalla completa nueva (estilo the-005.com).
+  - `search.js`: el buscador real (texto, #etiquetas y color).
+  - `mosaic.js`: armado del mosaico.
+  - `intro.js`: la intro con el cajón 3D (apagada, ver más abajo).
+- `src/dc/runtime.js`: runtime de las plantillas (sin `eval`, por la CSP de MV3). Morfea el DOM por posición: si un `<sc-if>` inserta algo antes, los elementos siguientes se recrean (ojo con las animaciones de entrada).
+- `src/library/main.js`: SPA que cambia de pantalla sin recargar (rutas `#/Main`, `#/Main1`, `#/Archivo`, `#/Tablero`, `#/Ajustes`, `#/Anotador`, `#/Seleccion`), idioma y entrada de la interfaz.
+- `src/core/i18n.js`: idiomas (ver "Idioma").
+- `src/core/settings.js`: reglas, preferencias, tablero elegido en el popup, nombres de tableros y copia de Apariencia, en `chrome.storage.local` (compartido con el service worker y el popup).
+- `src/background.js`: menú del clic derecho, atajo Alt+Shift+S, reglas al guardar, aviso en la página y panel flotante del ícono.
+- `src/popup.*` + `public/popup-theme.js`: popup según Figma, con el tema y el idioma del usuario.
+- `src/library/overrides.css`: ajustes de CSS sobre el diseño.
+
+## Tema
+- Todo usa variables CSS definidas en la raíz de cada pantalla con `uiVars()`: `--bg --t1..--t4 --pill --pillh --chip --muted --field --sw --velo --ink --f1 --f2`.
+- **Apariencia** (Reglas y ajustes), guardada en `localStorage['archivero.ui.v1']` = `{ pal, mode, f1, f2, fit, lang }`:
+  - **Idioma:** español, inglés o portugués.
   - **Modo:** claro / oscuro.
-  - **Paletas:** 12 monocromáticas, cada una con su tono y saturación: Grafito, Pizarra, Océano, Turquesa, Bosque, Musgo, Arena, Ámbar, Terracota, Vino, Rosa, Lavanda.
-  - **Tipografías:** 5 fuentes (Inter, Manrope, Space Grotesk, Fraunces, JetBrains Mono), elegibles por separado para títulos (`--f1`) y texto (`--f2`).
-  - **Pantalla completa:** cómo se ven las imágenes menores a 1920×1080.
-- Se guarda en `localStorage['archivero.ui.v1']`.
+  - **Paletas:** 12 monocromáticas (Grafito, Pizarra, Océano, Turquesa, Bosque, Musgo, Arena, Ámbar, Terracota, Vino, Rosa, Lavanda).
+  - **Tipografías:** Inter, Manrope, Space Grotesk, Fraunces, JetBrains Mono, por separado para títulos (`--f1`) y texto (`--f2`).
+  - **Pantalla completa:** cómo se ven las imágenes menores a 1920×1080 (fondo desenfocado por defecto, color de fondo, marco a tamaño real, ampliar y recortar).
+- La librería copia Apariencia en los ajustes compartidos (`settings.ui`) para que el aviso al guardar, que se dibuja desde el service worker, use la misma paleta, tipografía e idioma.
+
+## Idioma
+- Todo el texto se escribe en **español** (plantillas, parches, popup, aviso). `i18n.js` tiene un diccionario español → inglés / portugués (`ROWS`) y patrones para textos con números o nombres (`PATTERNS`).
+- `localizeTemplate` traduce las partes fijas de cada plantilla al montarla; el runtime pasa por `translate` los textos y los atributos legibles (`aria-label`, `placeholder`, `title`, `data-tip`, `alt`) al dibujar. No se traducen los datos del usuario (títulos, notas, etiquetas) ni los `value` de los campos.
+- Al cambiar de idioma se vuelve a montar la pantalla y las reglas de ejemplo que siguen sin tocar pasan al idioma nuevo (`localizeRules`).
+- Para encontrar textos sin traducir: con la librería abierta, en la consola, `__i18nMissing()`.
+- El nombre y la descripción de la extensión están en `public/_locales` (es, en, pt_BR, pt_PT); el menú del clic derecho y el aviso se traducen en `background.js`.
 
 ## Datos
-- `localStorage['archivero.lib.v1']` = `{ boards:[{id,name,t,sort,man,cover,coverUp}], items:[...], bsort, bman, seq, last, selId, cloud }`.
-- Pieza:
-  - Campos: `{id,bid,kind:'img'|'video'|'link'|'text',t,title,note,url,tags,atags,text,ow,oh,avg,gif,th}`.
-  - `ow/oh`: resolución original. `avg`: color promedio. `atags`: etiquetas automáticas por sitio. `th`: tiene miniatura.
-- Medios en **IndexedDB** (`archivero` / store `media`):
-  - Por cada pieza: clave `id` (original, data URL o Blob), `thumb:id` (miniatura de hasta 900 px) y `cover:boardId` (portada subida).
-- Copia local: exportar e importar `.json` con lib + medios. La "nube" es solo maqueta (interruptor, sincronizar ahora, última sincronización).
-- Notas del Anotador: **todavía no se guardan** (viven en memoria). Pendiente.
+- `localStorage['archivero.lib.v1']` = `{ boards:[{id,name,t,sort,man,cover,coverUp}], items:[...], bsort, bman, seq, last, selId }`.
+- Pieza: `{id,bid,kind:'img'|'video'|'link'|'text',t,title,note,url,tags,atags,text,ow,oh,avg,gif,th,pv,pvTry,cols}`.
+  - `ow/oh`: resolución original. `avg`: color promedio. `cols`: paleta de la imagen (para buscar por color). `atags`: etiquetas automáticas por sitio. `th`: tiene miniatura. `pv`: tiene imagen de vista previa (enlaces).
+- IndexedDB `archivero`, store `media`: `id` (original), `thumb:id` (miniatura), `prev:id` (vista previa de un enlace), `cover:boardId` (portada subida) y `notes:v1` (todas las notas del Anotador). Store `inbox`: lo que guarda la extensión hasta que la librería lo incorpora (`ingest.js`).
+- `localStorage['archivero.search.v1']`: búsquedas recientes.
+- Copia local: exportar e importar `.json` con la librería y los medios (las notas todavía no entran).
 
-## Pantallas y comportamiento (ver los `.dc.html`)
-- **Botonera inferior (pill)**
-  - Siempre visibles las 3 secciones: Principal, Archivo y Anotador; la actual va resaltada.
-  - Al pasar el mouse aparecen las herramientas de la sección a la izquierda y el engranaje de Reglas y ajustes a la derecha.
-  - Cartelito propio arriba de cada botón, sin el `title` nativo.
-- **Buscador:** la pastilla de arriba se expande en un panel con búsquedas recientes y lo guardado recientemente. Tiene animación de entrada y de salida, incluida la X.
-- **Principal – vista 2 (mosaico)** `Main.dc.html`
-  - **Lienzo:** infinito y sin bordes. Se arrastra con el botón del medio en cualquier dirección; la rueda mueve vertical y Shift + rueda horizontal.
-  - **Armado por bloques:** el espacio se arma en bloques de al menos el tamaño de la pantalla. Cada bloque llena todo su espacio con un treemap con huecos de 12 px, y en cada bloque cada pieza aparece una sola vez. Los bloques vecinos usan otro orden (mezcla con semilla por bloque).
-  - **Tamaños base (`mbox`):**
-    - Tweets y textos: espacios chicos.
-    - YouTube y Spotify: tamaño fijo.
-    - Imágenes: según su resolución (chica, mediana o grande), sin agrandarse por encima de su tamaño real.
-  - **Pasar el mouse:** solo oscurece la pieza; sin agrandarla y sin borde.
-  - **Clic:** la pieza se eleva un poco con sombra y muestra su info, con "Ver ficha completa". Mientras está abierta se desactivan el paneo y los efectos de hover hasta tocar afuera.
-  - **Intro:**
-    - Secuencia: un cubo 3D gira mientras el contador sube de 0 a 100 %; la cámara entra en el cubo; aparecen los mosaicos de a poco y al final la interfaz. Dura unos 3,3 s.
-    - Se puede configurar en "una vez por sesión" (por defecto), "siempre" o "nunca".
-    - **El cubo se va a reemplazar por el logo** cuando exista.
-- **Principal – vista 1 (pantalla completa)** `Main1.dc.html`
-  - **Navegación:** una pieza por pantalla, con la rueda o con Anterior / Siguiente. El orden es aleatorio y el botón "Mezclar" lo vuelve a sortear.
-  - **Info:** al tocar el título se abre la info, con el título reubicado según el alto de la ventana.
-  - **Imágenes menores a 1920×1080:** 4 modos; Mateo todavía no eligió el definitivo:
-    - Fondo desenfocado (el recomendado).
-    - Color de fondo.
-    - Marco a tamaño real.
-    - Ampliar y recortar.
-  - Cada cambio de modo es una transición con fundido. "Mezclar" y "Ajuste" van abajo a la derecha.
-- **Archivo** `Archivo.dc.html`
-  - Lista de tableros y vista de tablero en una sola pantalla, para no perder estado. `Tablero.dc.html` es la misma pantalla arrancando en la vista de tablero; `Ajustes.dc.html` es la misma con Reglas y ajustes abierto.
-  - **Tableros:**
-    - Crear, renombrar y eliminar (con confirmación), y elegir portada (automática, una pieza o una imagen subida).
-    - Ordenar por recientes, antiguos, A–Z, cantidad de piezas o manual (arrastrando).
-  - **Vista de tablero** (Mateo dijo que está **perfecta así**): filas justificadas tipo Google Fotos.
-    - Sin huecos y sin deformar las piezas; lo último guardado va primero.
-    - El tamaño (chica/mediana/grande según resolución) define la altura de la fila.
-    - Textos siempre horizontales, más anchos cuanto más largos.
-  - **Enlaces "embebidos":** por ahora la forma es una maqueta; en la app real el servidor trae la vista previa.
-    - Spotify: cuadrado.
-    - X: horizontal, con forma de tweet.
-    - YouTube: chico.
-  - **Piezas:**
-    - Videos y GIF se reproducen solos, en silencio y en bucle, y solo cuando están a la vista.
-    - Etiquetas automáticas según el sitio de origen (por ejemplo, pinterest → #pinterest #referencia).
-  - **Acciones sobre las piezas:**
-    - Agregar a mano: imagen, video, enlace o texto, o arrastrando archivos o links a la pantalla.
-    - Ordenar como los tableros, con "Mover al principio/al final".
-    - Ficha completa editable (título, nota, sitio, etiquetas, tablero, eliminar).
-    - Animaciones de entrada escalonadas y de salida en las ventanas.
-- **Ficha completa:** la misma ficha que en los tableros (imagen a la izquierda, campos a la derecha). Se abre desde el mosaico, la pantalla completa y `Seleccion.dc.html`.
-- **Anotador** `Anotador.dc.html`
-  - **Grilla 3D:** las tarjetas rotan con el mouse; el título aparece al pasar el mouse, sin animación, a `translateZ(70px)`.
-  - **Portada opcional:** flota a la misma altura que ese título y rota con la tarjeta.
-  - **Carrusel:** frente para dibujar, imágenes y capturas; reverso para el texto. Tocar la tarjeta la da vuelta y tocar fuera del texto vuelve al frente.
-  - **Botón "Listo":** en la barra devuelve a la grilla; en el reverso vuelve al frente.
-  - **Menú "⋯" por nota:** abrir, editar nombre y portada, mover, eliminar (con confirmación).
-  - **Orden:** recientes, antiguas, A–Z.
-  - **Notas sueltas:** sin libros; el nombre es obligatorio al crear.
-- **Reglas y ajustes** (engranaje):
-  - **Reglas:** condiciones por dominio, palabras clave, proyecto activo o tipo, con acción mover a un tablero y/o etiquetar.
-  - **Tableros:** los reales.
-  - **Proyectos.**
-  - **Apariencia.**
-  - **Nube y copia:** exportar e importar.
-- **Extensión** `Extension.dc.html`: popup y aviso al guardar (todavía en grises de wireframe, sin tema).
-- **Botones** `Botones.dc.html`: referencia de la pill por pantalla.
+## Pantallas y comportamiento
+- **Botonera inferior (pill):** las 3 secciones siempre visibles (Principal, Archivo, Anotador), la actual resaltada; al pasar el mouse aparecen las herramientas a la izquierda y el engranaje a la derecha, con cartelito propio. Mismo tamaño y posición en todas las vistas.
+- **Entrada:** buscador, botonera y carrete aparecen con un fundido de 1,4 s una sola vez por pantalla (`data-ui="done"` en `#app`); las piezas del mosaico entran en 1,6 s escalonadas.
+- **Buscador:** pastilla arriba con el texto "Buscar…" y brillo animado. Se expande en un panel: busca por nombre, nota, sitio, tablero, tipo, `#etiqueta` y color (selector propio con cuadro de saturación, barra de tono, hex y "+" para sumar colores). Recientes y lo guardado recientemente.
+- **Principal – vista 2 (mosaico):**
+  - Lienzo infinito que se arrastra con el botón del medio (rueda: vertical; Shift + rueda: horizontal). Un solo bloque que crece con las piezas, cada una una sola vez y sin deformarse.
+  - Spotify con su reproductor horizontal; textos con caja y letra según la cantidad de caracteres.
+  - Pasar el mouse oscurece la pieza y escribe su título. **Tocar una pieza abre su ficha completa.**
+  - **Intro:** apagada por ahora (`INTRO = false` en `patches.js`). Está hecha en `intro.js`: un cajón 3D (el logo de Figma, frente con borde y tirador) gira mientras el contador sube a 100 %, la cámara se acerca y aparecen los mosaicos, con los colores del tema.
+- **Principal – vista 1 (pantalla completa)**, como https://www.the-005.com/ (`fullscreen.js`):
+  - Solo imágenes y páginas web (sin reproductores). Una pieza a toda la pantalla que cambia sola cada 2 s con corte seco; leyenda abajo a la izquierda (título · sitio).
+  - Carrete de miniaturas arriba de la botonera (3 a la vista, la del medio es la actual) que se desliza en cada cambio. Pasar el mouse lo detiene; se puede arrastrar o tocar una miniatura.
+  - Tocar la pieza abre su ficha (el carrusel se detiene mientras está abierta, igual que con el buscador o los ajustes). Rueda y flechas: anterior / siguiente.
+- **Archivo:** lista de tableros y vista de tablero en la misma pantalla. Crear, renombrar, eliminar, portada (automática, una pieza o imagen subida), ordenar (recientes, antiguos, A–Z, cantidad, manual). Vista de tablero con filas justificadas tipo Google Fotos (Mateo dijo que está **perfecta así**). Vistas previas reales de enlaces (Open Graph; YouTube, Vimeo, Spotify, X y TikTok con su reproductor).
+- **Ficha completa:** la misma en todas las vistas (imagen o reproductor a la izquierda, campos a la derecha, "Ir al sitio").
+- **Anotador:** grilla 3D de notas, frente para dibujar e imágenes, reverso para el texto, portada opcional, menú "⋯", orden. Las notas se guardan (`notes.js`).
+- **Reglas y ajustes** (engranaje): Reglas, Tableros, Apariencia, **Copia local** (exportar/importar y las preferencias "Aplicar reglas al guardar" y "Mostrar aviso al guardar") y **Manifesto** (texto del proyecto, open source y enlace a GitHub). Proyectos se sacó por confuso.
+- **Extensión:**
+  - Popup según Figma (node 2082-26) con el tema y el idioma. Al tocar el ícono se abre como panel flotante redondo dentro de la página; en las páginas donde Chrome no deja entrar (chrome://, Web Store…) queda el popup normal.
+  - Clic derecho sobre imagen, video, enlace, texto o página → "Guardar … en Archivero"; atajo Alt+Shift+S.
+  - Aviso en la página al guardar: con el tema y el idioma, 2 s en pantalla (el mouse encima lo pausa), con "Cambiar" para corregir tablero y etiquetas.
 
-## Problemas conocidos y pendientes
-1. **Parpadeo al cambiar de pantalla en Claude Design:** lo causa el lienzo, que recarga cada pantalla como documento. Se mitigó pintando el fondo con la paleta en el `<head>`. En la app real conviene una sola página (SPA) que cambie de sección sin recargar.
-2. **Notas sin persistencia:** las notas del Anotador no se guardan. Usar IndexedDB igual que las piezas.
-3. **Logo:** reemplazar el cubo de la intro cuando exista.
-4. **Pantalla completa:** Mateo tiene que elegir el modo para imágenes chicas.
-5. **Vistas previas reales de enlaces:** oEmbed / Open Graph del lado del servidor o de la extensión.
-6. **Nube real:** hoy es maqueta.
-7. **Rendimiento:** ya hay miniaturas, `loading="lazy"`, videos que solo corren a la vista y brillo de carga. Falta virtualizar cuando haya cientos de piezas.
-8. **Extensión real:** la carpeta `extension/` tiene la versión anterior. Hay que llevar el diseño nuevo a esa base (o rehacer la librería) manteniendo el guardado con clic derecho, el atajo Alt+Shift+S, el aviso para corregir y las reglas.
+## Quitado a propósito
+- Las maquetas del diseño que no hacían nada: nube (sincronizar), "copia automática en este equipo", herramienta "Captura de pantalla" del Anotador.
+- La pieza elevada con resumen del mosaico y la vista anterior de pantalla completa (título escrito, Mezclar, Ajuste, Anterior/Siguiente).
+- La escritura letra por letra de "Buscar…" (Mateo la pidió sacar; el brillo se queda).
+
+## Pendientes
+1. **Nube real:** no existe; se sacó la maqueta.
+2. **Notas en la copia local:** Exportar/Importar no incluye las notas del Anotador.
+3. **Intro:** decidir si vuelve el cajón 3D.
+4. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
 
 ## Generador del diseño (si querés seguir editando los `.dc.html`)
 - `make.sh` corre en orden:
@@ -129,16 +102,6 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
   5. `others30.py`: Main, Main1, Selección, buscadores y extras del Anotador.
   6. `extras.py`: Ajustes y canvas.
   7. `theme31.py`: tema, fuentes, pantallas fluidas, pill, transiciones.
-- `lib30.py` tiene el JS compartido que se inyecta en todas las pantallas:
-  - Librería, medios IndexedDB y miniaturas.
-  - Etiquetas por sitio y tamaños (`shapeOf`, `pack`: filas justificadas; `mbox`/`mchunk`/`tmap`: mosaico).
-  - Ficha compartida, tema y transiciones.
-- Usan rutas absolutas `/tmp/w/...`: `base/` (archivos de partida), `gen.py`, `common4.py`, `shim.js` (réplica mínima del runtime para probar con Playwright) y `shoot2.py`. Copiá `generador/` a `/tmp/w/` o ajustá las rutas. La salida queda en `/tmp/w/out/`.
-- Para publicar en Claude Design hay que subir los `.dc.html` al artefacto. Desde Claude Code tomalos como referencia para implementar la app real.
-
-## Cómo seguir (sugerencia)
-Construir la librería real como SPA (Vite + JS o React) dentro de `extension/`, reutilizando:
-- de `lib30.py`: los algoritmos de armado, la librería, IndexedDB y el tema;
-- de los `.dc.html`: el marcado y las animaciones.
-
-Mantener la UI idéntica a los `.dc.html`. Probar cada pantalla en el navegador antes de mostrarla.
+- `lib30.py` tiene el JS compartido que se inyecta en todas las pantallas (librería, medios, etiquetas por sitio, `shapeOf`/`pack`/`mbox`/`mchunk`/`tmap`, ficha, tema, transiciones).
+- Usan rutas absolutas `/tmp/w/...`: `base/`, `gen.py`, `common4.py`, `shim.js` y `shoot2.py`. Copiá `generador/` a `/tmp/w/` o ajustá las rutas. La salida queda en `/tmp/w/out/`.
+- Si se regeneran los `.dc.html` y se vuelven a importar, `patches.js` avisa en la consola ("El diseño cambió: no encontré…") cada reemplazo que deje de encajar.

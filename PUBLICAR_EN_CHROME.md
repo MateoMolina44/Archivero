@@ -30,6 +30,14 @@ Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de
   > • Temas claros y oscuros con 12 paletas y 5 tipografías.
   > • Todo queda en tu navegador: sin cuentas, sin servidores, sin publicidad. Exportá una copia cuando quieras.
 
+- **Otros idiomas:** el nombre y la descripción corta ya vienen traducidos en el paquete (`extension/public/_locales`: español, inglés y portugués). Chrome y la tienda muestran la del idioma de cada usuario, y la extensión usa el español si el idioma no es ninguno de esos. En la ficha podés agregar **Inglés** y **Portugués (Brasil)** con **Agregar idioma** y pegar:
+
+  > **EN:** Archivero is your personal inspiration library. Save images, videos, links and text from any page with right-click or Alt+Shift+S, and they sort themselves into boards by your rules (by site, keywords or content type).
+  > • Gallery-style boards, an editable card for every piece and automatic tags by site. • Infinite mosaic and a fullscreen slideshow. • Notebook to draw, paste images and write notes. • Light and dark themes with 12 palettes, 5 typefaces and 3 languages. • Everything stays in your browser: no accounts, no servers, no ads. Export a backup whenever you want.
+
+  > **PT:** O Archivero é a sua biblioteca pessoal de inspirações. Salve imagens, vídeos, links e textos de qualquer página com o clique direito ou Alt+Shift+S, e eles se organizam sozinhos em quadros pelas suas regras (por site, palavras-chave ou tipo de conteúdo).
+  > • Quadros em estilo galeria, ficha editável para cada peça e etiquetas automáticas pelo site. • Mosaico infinito e apresentação em tela cheia. • Anotações para desenhar, colar imagens e escrever. • Temas claros e escuros com 12 paletas, 5 tipografias e 3 idiomas. • Tudo fica no seu navegador: sem contas, sem servidores, sem publicidade. Exporte uma cópia quando quiser.
+
 - **Ícono de la tienda:** 128×128 → `extension/public/icons/archivero-128.png`.
 - **Capturas:** al menos 1, ideal 3–5, de **1280×800** (o 640×400), PNG o JPG. Sugeridas: tablero con piezas, mosaico principal, Reglas y ajustes, popup + aviso. Si querés te las saco yo desde el navegador con datos de ejemplo.
 - **Mosaico promocional pequeño (opcional):** 440×280.

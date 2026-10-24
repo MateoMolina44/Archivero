@@ -1,0 +1,13 @@
+{
+  "appName": {
+    "message": "Archivero"
+  },
+  "appDesc": {
+    "message": "Guardá inspiraciones (imágenes, links, textos, videos, herramientas) y se organizan solas según tus reglas.",
+    "description": "Descripción de la extensión en Chrome y en la Web Store."
+  },
+  "cmdSave": {
+    "message": "Guardar esta página en Archivero",
+    "description": "Atajo Alt+Shift+S."
+  }
+}
