@@ -98,7 +98,8 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - La escritura letra por letra de "Buscar…" (Mateo la pidió sacar; el brillo se queda).
 
 ## Pendientes
-1. **Nube:** falta probarla con dos computadoras y publicar la app de Google (hoy está en modo prueba).
+1. **Nube:** probada entre la extensión y la web. Falta que Google apruebe la publicación de la app (hoy en modo prueba).
+   - Contacto público: archiverowebapp@gmail.com (política de privacidad y app de Google).
 2. **Intro:** decidir si vuelve el cajón 3D.
 3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
 

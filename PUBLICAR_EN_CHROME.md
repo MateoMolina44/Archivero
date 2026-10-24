@@ -58,7 +58,7 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
 - **¿Usás código remoto?** → **No.** (Todo, incluidas las tipografías, va dentro del paquete.)
 - **Uso de datos:** marcá **Contenido del sitio web** (lo que el usuario elige guardar) e **Información de identificación personal** (nombre y email, solo si inicia sesión para usar la nube). No marques las demás categorías.
 - Marcá las tres certificaciones: no se venden datos, no se usan para fines ajenos al propósito único, no se usan para créditos.
-- **URL de la política de privacidad:** `https://archivero-green.vercel.app/privacidad.html` Antes de publicar podés completar el contacto en `extension/privacidad.html`.
+- **URL de la política de privacidad:** `https://archivero-green.vercel.app/privacidad.html` El contacto es archiverowebapp@gmail.com (el mismo conviene usar en la ficha de la tienda).
 
 ## 5. Distribución y envío
 1. **Visibilidad:** "Pública" (o "No listada" si querés compartirla solo con el enlace mientras la probás).
