@@ -11,13 +11,15 @@ Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia vis
 - Figma: `https://www.figma.com/design/WiVy15VitUHjYefBSmO9KB/Trabajo` — node `2059-8` (pantallas, "Frame Animacion 1–6" de la intro con el cajón, barra de búsqueda, botón de sección) y `2082-26` (popup de la extensión).
 
 ## Qué es
-Archivero = librería personal de inspiraciones (web) + extensión de Chrome que guarda cosas de la web y las organiza sola con reglas. Estilo Milanote/Pinterest/Cosmos. Todo es local (localStorage + IndexedDB + `chrome.storage.local`).
+Archivero = librería personal de inspiraciones (web) + extensión de Chrome que guarda cosas de la web y las organiza sola con reglas. Estilo Milanote/Pinterest/Cosmos. Todo se guarda en el navegador (localStorage + IndexedDB + `chrome.storage.local`); la nube (Supabase, con Google) es opcional y sincroniza eso entre la extensión, la web y otras computadoras.
 
 ## Carpetas
 - `diseno/project/` — el diseño original: archivos `.dc.html` (HTML + `<x-dc>` con `{{huecos}}`, `<sc-for>`, `<sc-if>` y una clase `Component extends DCLogic` con `renderVals()`). Son la base del marcado y del comportamiento; lo que cambió después vive en `extension/src/library/` (ver "Cómo está armado").
 - `diseno/generador/` — scripts Python que generan esos `.dc.html`. Ver "Generador del diseño".
 - `extension/` — la app real (Vite + extensión MV3). `npm install`, `npm run build` → `dist/` (extensión) y `npm run build:web` → `dist-web/` (web en Vercel). Detalles en `extension/README.md`.
 - `PUBLICAR_EN_CHROME.md` — guía para la Chrome Web Store (con las descripciones en ES/EN/PT).
+- `supabase/schema.sql` — tablas, bucket y reglas de acceso de la nube.
+- `README.md` (en inglés, la portada del repo en GitHub) con capturas de `docs/screenshots/` e instrucciones de instalación. `LICENSE`: MIT, a nombre de Mateo Molina.
 - Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` de https://github.com/MateoMolina44/Archivero.
 
 ## Cómo está armado (extension/)
@@ -34,6 +36,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - `src/background.js`: menú del clic derecho, atajo Alt+Shift+S, reglas al guardar, aviso en la página y panel flotante del ícono.
 - `src/popup.*` + `public/popup-theme.js`: popup según Figma, con el tema y el idioma del usuario.
 - `src/library/overrides.css`: ajustes de CSS sobre el diseño.
+- `src/library/cloud.js`: la nube (ver "Nube"). `src/library/notes.js`: guardado de las notas del Anotador.
 
 ## Tema
 - Todo usa variables CSS definidas en la raíz de cada pantalla con `uiVars()`: `--bg --t1..--t4 --pill --pillh --chip --muted --field --sw --velo --ink --f1 --f2`.
@@ -58,7 +61,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
   - `ow/oh`: resolución original. `avg`: color promedio. `cols`: paleta de la imagen (para buscar por color). `atags`: etiquetas automáticas por sitio. `th`: tiene miniatura. `pv`: tiene imagen de vista previa (enlaces).
 - IndexedDB `archivero`, store `media`: `id` (original), `thumb:id` (miniatura), `prev:id` (vista previa de un enlace), `cover:boardId` (portada subida) y `notes:v1` (todas las notas del Anotador). Store `inbox`: lo que guarda la extensión hasta que la librería lo incorpora (`ingest.js`).
 - `localStorage['archivero.search.v1']`: búsquedas recientes.
-- Copia local: exportar e importar `.json` con la librería y los medios (las notas todavía no entran).
+- `localStorage['archivero.cloud.v1']`: estado de la sincronización (usuario, cursor, huella de cada fila sincronizada y medios ya subidos). La sesión de Supabase vive en `sb-dwtjnftbfdcswrojnzec-auth-token`.
 
 ## Pantallas y comportamiento
 - **Botonera inferior (pill):** las 3 secciones siempre visibles (Principal, Archivo, Anotador), la actual resaltada; al pasar el mouse aparecen las herramientas a la izquierda y el engranaje a la derecha, con cartelito propio. Mismo tamaño y posición en todas las vistas.
@@ -76,7 +79,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - **Archivo:** lista de tableros y vista de tablero en la misma pantalla. Crear, renombrar, eliminar, portada (automática, una pieza o imagen subida), ordenar (recientes, antiguos, A–Z, cantidad, manual). Vista de tablero con filas justificadas tipo Google Fotos (Mateo dijo que está **perfecta así**). Vistas previas reales de enlaces (Open Graph; YouTube, Vimeo, Spotify, X y TikTok con su reproductor).
 - **Ficha completa:** la misma en todas las vistas (imagen o reproductor a la izquierda, campos a la derecha, "Ir al sitio").
 - **Anotador:** grilla 3D de notas, frente para dibujar e imágenes, reverso para el texto, portada opcional, menú "⋯", orden. Las notas se guardan (`notes.js`).
-- **Reglas y ajustes** (engranaje): Reglas, Tableros, Apariencia, **Copia local** (exportar/importar y las preferencias "Aplicar reglas al guardar" y "Mostrar aviso al guardar") y **Manifesto** (texto del proyecto, open source y enlace a GitHub). Proyectos se sacó por confuso.
+- **Reglas y ajustes** (engranaje): Reglas, Tableros, Apariencia, **Nube y copia** (cuenta de la nube, exportar/importar copia y las preferencias "Aplicar reglas al guardar" y "Mostrar aviso al guardar") y **Manifesto** (texto del proyecto, open source y enlace a GitHub). Proyectos se sacó por confuso.
 - **Extensión:**
   - Popup según Figma (node 2082-26) con el tema y el idioma. Al tocar el ícono se abre como panel flotante redondo dentro de la página; en las páginas donde Chrome no deja entrar (chrome://, Web Store…) queda el popup normal.
   - Clic derecho sobre imagen, video, enlace, texto o página → "Guardar … en Archivero"; atajo Alt+Shift+S.
@@ -88,20 +91,32 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - Sincroniza al abrir, 4 s después de cada cambio, cada 2 minutos y al volver a la ventana. Gana lo local si cambió desde la última sincronización; si no, lo de la nube. Los tableros con el mismo nombre se juntan en el más antiguo.
 - En la extensión el inicio de sesión usa `chrome.identity` y vuelve a `https://hfekjnlbpinliclggobiencigmjoboki.chromiumapp.org/`: ese ID es fijo gracias a `key` en el manifest. Esa dirección tiene que estar en Supabase → Authentication → URL Configuration → Redirect URLs.
 - Las notas del Anotador tienen id único (`patches.js`), porque el diseño las numeraba y dos computadoras repetirían ids.
+- Lo que guarda la extensión con el clic derecho se sube cuando se abre la librería (el service worker no sincroniza).
+- Archivos de más de 50 MB (el límite por archivo del plan gratis) quedan solo en la computadora donde se guardaron.
+- Configuración (ya hecha, por si hay que rehacerla):
+  - Supabase: proyecto `dwtjnftbfdcswrojnzec` (plan gratis: se pausa tras una semana sin uso y se reactiva desde el panel). La URL y la clave pública (publishable) están en `cloud.js`; la clave secreta nunca va al código.
+  - Authentication → Sign In / Providers → Google, con el Client ID y el secret del cliente OAuth "Web application" del proyecto de Google Cloud "Archivero" (redirect `https://dwtjnftbfdcswrojnzec.supabase.co/auth/v1/callback`).
+  - Authentication → URL Configuration: Site URL `https://archivero-green.vercel.app`; Redirect URLs `https://archivero-green.vercel.app/**`, `http://localhost:5173/**` y `https://hfekjnlbpinliclggobiencigmjoboki.chromiumapp.org/**`. Si se publica en la Chrome Web Store, sumar la del ID de la tienda.
+  - Google Auth Platform: app "Archivero" publicada (en producción), sin logo (con logo pide verificación de marca), dominios autorizados `archivero-green.vercel.app` y `dwtjnftbfdcswrojnzec.supabase.co`. Contacto: archiverowebapp@gmail.com.
 
 ## Copia local
 - Exportar/Importar copia (Reglas y ajustes → Copia local) lleva la librería, los medios y las notas del Anotador (campo `notes`). Lo arma `backupExport`/`backupImport` en `patches.js`; una copia vieja sin `notes` no toca las notas actuales.
 
 ## Quitado a propósito
-- Las maquetas del diseño que no hacían nada: nube (sincronizar), "copia automática en este equipo", herramienta "Captura de pantalla" del Anotador.
+- Las maquetas del diseño que no hacían nada: el interruptor y el aviso de maqueta de la nube (reemplazados por la cuenta real), "copia automática en este equipo", herramienta "Captura de pantalla" del Anotador.
 - La pieza elevada con resumen del mosaico y la vista anterior de pantalla completa (título escrito, Mezclar, Ajuste, Anterior/Siguiente).
 - La escritura letra por letra de "Buscar…" (Mateo la pidió sacar; el brillo se queda).
 
 ## Pendientes
-1. **Nube:** probada entre la extensión y la web. Falta que Google apruebe la publicación de la app (hoy en modo prueba).
-   - Contacto público: archiverowebapp@gmail.com (política de privacidad y app de Google).
+1. **Chrome Web Store:** sin publicar todavía (guía en `PUBLICAR_EN_CHROME.md`).
 2. **Intro:** decidir si vuelve el cajón 3D.
 3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
+
+## Versiones y releases
+- Cada versión: subir `version` en `extension/package.json` y `extension/public/manifest.json`, `npm run build`, commit y push.
+- El zip del release (`archivero-extension-vX.Y.Z.zip`, en la raíz, ignorado por git) se arma con el contenido de `extension/dist/` y `manifest.json` en la raíz. Con barras `/` en las rutas: `Compress-Archive` de PowerShell 5.1 usa `\` y el zip no anda en Mac/Linux (se arma con `zipfile` de Python).
+- Se publica con `gh release create vX.Y.Z archivero-extension-vX.Y.Z.zip` y notas en inglés. El README apunta al último release.
+- Desde la v0.4.0 la extensión tiene ID fijo (`key` en el manifest): actualizar conserva la librería. Desde la 0.3.x Chrome la trata como otra extensión (hay que exportar e importar la copia).
 
 ## Generador del diseño (si querés seguir editando los `.dc.html`)
 - `make.sh` corre en orden:

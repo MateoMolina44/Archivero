@@ -38,7 +38,7 @@ Archivero isn't on the Chrome Web Store yet, so you install it by hand. It works
 5. Click **Load unpacked** and pick the unzipped folder (the one with `manifest.json` inside).
 6. Pin Archivero from the puzzle-piece menu so its button is always visible.
 
-To update, download the new zip, replace the folder's contents and click the reload ↻ button on Archivero's card in `chrome://extensions`. Your library is kept.
+To update, download the new zip, replace the folder's contents and click the reload ↻ button on Archivero's card in `chrome://extensions`. Your library is kept. (Coming from v0.3.x? Export a backup first: v0.4.0 changed the extension's ID, so Chrome installs it as a new extension.)
 
 ### Option B: build it from the source code
 
@@ -73,6 +73,7 @@ Then follow steps 3–6 above and choose the `extension/dist` folder.
 - `extension/`: the actual code (Vite). `npm run build` creates the MV3 extension in `dist/`, `npm run build:web` the web version in `dist-web/`. Developer notes (in Spanish) in `extension/README.md`.
 - `diseno/`: the approved design (`project/*.dc.html`, the source of truth for the UI) and its generators.
 - `docs/screenshots/`: the screenshots above.
+- `supabase/schema.sql`: database tables and access rules for the optional cloud sync.
 - `CLAUDE.md`: design decisions and how the app is put together (in Spanish).
 - `PUBLICAR_EN_CHROME.md`: guide to publish the extension on the Chrome Web Store (in Spanish).
 

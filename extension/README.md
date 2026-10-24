@@ -1,7 +1,7 @@
 # Archivero
 
 Librería personal de inspiraciones + extensión de Chrome que guarda y organiza sola.
-Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con Exportar/Importar en Reglas y ajustes → Copia local (incluye las notas del Anotador).
+Todo se guarda en el navegador (localStorage + IndexedDB). Opcional: iniciar sesión con Google para sincronizar la librería en la nube (Supabase) entre la extensión, la web y otras computadoras. Copia con Exportar/Importar en Reglas y ajustes → Nube y copia (incluye las notas del Anotador).
 
 ## Instalar
 1. `npm install` y `npm run build` (genera `dist/`).
@@ -26,10 +26,12 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 - `src/library/ingest.js`: incorpora lo que guarda la extensión (bandeja `inbox` de IndexedDB) a la librería.
 - `src/background.js`: menús, atajo, reglas y aviso. `src/popup.*`: popup según `Extension.dc.html`.
 - `src/core/settings.js`: reglas, tablero elegido y preferencias en `chrome.storage.local` (compartido por todo).
+- `src/library/cloud.js`: nube opcional (inicio de sesión con Google y sincronización). Tablas y reglas de acceso en `../supabase/schema.sql`; configuración en `../CLAUDE.md` → Nube.
+- `src/library/notes.js`: guardado de las notas del Anotador.
 
 ## Probar la librería sin instalar la extensión
 `npm run preview` y abrir `http://localhost:5173/library.html`. Fuera de la extensión los ajustes usan localStorage.
 
 ## Pendiente
-- Nube: hecha (`src/library/cloud.js`, `supabase/schema.sql`); falta publicar la app de Google. Decidir si vuelve la intro con el cajón.
+- Publicar en la Chrome Web Store (`../PUBLICAR_EN_CHROME.md`). Decidir si vuelve la intro con el cajón.
 - La librería React anterior quedó en `legacy/library-react/` (no se compila; se puede borrar).

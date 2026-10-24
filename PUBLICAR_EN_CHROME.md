@@ -1,6 +1,8 @@
 # Publicar Archivero en Chrome Web Store
 
-Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el contenido de `extension/dist/` después de `npm run build`; `manifest.json` tiene que quedar en la raíz del zip).
+Archivo a subir: un zip con el contenido de `extension/dist/` después de `npm run build`, con `manifest.json` en la raíz del zip.
+
+**Ojo con el campo `key`:** el manifest lo tiene para que la extensión cargada a mano tenga siempre el mismo ID (lo necesita el inicio de sesión con Google). La tienda no lo acepta: en el zip para la tienda, borrá la línea `"key": …` del `manifest.json` de `dist/` (no del de `public/`). Para eso conviene armar un zip aparte, `archivero-tienda-vX.Y.Z.zip`; el de GitHub sigue con `key`.
 
 ## 0. Probala antes de subirla
 1. Descomprimí `archivero-extension-vX.Y.Z.zip` en una carpeta.
@@ -15,7 +17,8 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
 
 ## 2. Subir el paquete
 1. En el panel: **Agregar elemento nuevo** → subí `archivero-extension-vX.Y.Z.zip`.
-2. Se crea el borrador con el nombre, la versión (0.2.0) y los íconos del manifest.
+2. Se crea el borrador con el nombre, la versión y los íconos del manifest.
+3. **Nube:** la tienda le da a la extensión un ID propio (aparece en el panel y en la URL de la ficha). Agregá `https://<ID de la tienda>.chromiumapp.org/**` en Supabase → Authentication → URL Configuration → Redirect URLs; si no, el inicio de sesión con Google falla en la versión de la tienda.
 
 ## 3. Ficha de la tienda (pestaña "Ficha de Play Store" / "Store listing")
 - **Idioma:** Español (Latinoamérica).
@@ -39,7 +42,7 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
   > • Quadros em estilo galeria, ficha editável para cada peça e etiquetas automáticas pelo site. • Mosaico infinito e apresentação em tela cheia. • Anotações para desenhar, colar imagens e escrever. • Temas claros e escuros com 12 paletas, 5 tipografias e 3 idiomas. • Tudo fica no seu navegador, sem conta obrigatória e sem publicidade. Se quiser, entre com o Google para sincronizar sua biblioteca entre computadores.
 
 - **Ícono de la tienda:** 128×128 → `extension/public/icons/archivero-128.png`.
-- **Capturas:** al menos 1, ideal 3–5, de **1280×800** (o 640×400), PNG o JPG. Sugeridas: tablero con piezas, mosaico principal, Reglas y ajustes, popup + aviso. Si querés te las saco yo desde el navegador con datos de ejemplo.
+- **Capturas:** al menos 1, ideal 3–5, de **1280×800** (o 640×400), PNG o JPG. Ya están hechas, en inglés y a 1280×800: `docs/screenshots/` (mosaico, tablero, pantalla completa, Reglas y ajustes, Anotador y modo oscuro). Para la ficha en español se pueden sacar de nuevo con la interfaz en español.
 - **Mosaico promocional pequeño (opcional):** 440×280.
 
 ## 4. Prácticas de privacidad (pestaña "Privacidad")
@@ -66,6 +69,6 @@ Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el conte
 3. **Enviar para revisión.** Con el permiso `<all_urls>` la revisión suele tardar más (de unos días a un par de semanas). Llega un email cuando la aprueban o si piden cambios.
 
 ## 6. Actualizaciones
-1. Subí `"version"` en `extension/public/manifest.json` (por ejemplo 0.2.1) y en `package.json`.
-2. `npm run build` dentro de `extension/` y volvé a armar el zip desde `dist/` (con `manifest.json` en la raíz).
+1. Subí `"version"` en `extension/public/manifest.json` y en `package.json`.
+2. `npm run build` dentro de `extension/` y volvé a armar el zip desde `dist/` (con `manifest.json` en la raíz y sin `key`).
 3. En el panel: **Paquete → Subir paquete nuevo** → enviar para revisión.

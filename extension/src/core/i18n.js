@@ -367,7 +367,7 @@ const PATTERNS = [
     'Backup ' + (m[1] === 'descargada' ? 'downloaded' : 'restored') + ': ' + m[2] + ' pieces, ' + m[3] + ' boards and ' + m[4] + ' notes.',
     'Cópia ' + (m[1] === 'descargada' ? 'baixada' : 'restaurada') + ': ' + m[2] + ' peças, ' + m[3] + ' quadros e ' + m[4] + ' notas.',
   ]],
-  [/^Conectada como (.*)$/, (m) => ['Signed in as ' + m[1], 'Conectado como ' + m[1]]],
+  [/^Conectada como ([^·]*)$/, (m) => ['Signed in as ' + m[1], 'Conectado como ' + m[1]]],
   [/^última sincronización (.*)$/, (m) => ['last synced ' + m[1], 'última sincronização ' + m[1]]],
   [/^No se pudo sincronizar: (.*)$/, (m, t) => ["Couldn't sync: " + t(m[1]), 'Não foi possível sincronizar: ' + t(m[1])]],
   [/^(Subiendo|Bajando) (imágenes|cambios) \((\d+) de (\d+)\)…$/, (m) => {
