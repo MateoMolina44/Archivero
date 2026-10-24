@@ -17,8 +17,19 @@
     </div>
     <div class="row" id="new-row" hidden>
       <input id="new-name" type="text" placeholder="Nombre del proyecto" maxlength="40" />
-      <button id="new-ok" class="sq ok" aria-label="Crear">✓</button>
+      <button id="new-ok" class="sq ok" aria-label="Crear proyecto">✓</button>
     </div>
+
+    <label for="board">Guardar en</label>
+    <div class="row">
+      <select id="board"></select>
+      <button id="new-board" class="sq" aria-label="Crear tablero">+</button>
+    </div>
+    <div class="row" id="board-row" hidden>
+      <input id="board-name" type="text" placeholder="Nombre del tablero" maxlength="40" />
+      <button id="board-ok" class="sq ok" aria-label="Crear tablero">✓</button>
+    </div>
+    <p id="board-hint" class="hint" hidden>Todavía no tenés tableros. Creá uno con + para elegir dónde se guarda.</p>
 
     <button id="save-page" class="pill">Guardar esta página</button>
     <button id="open-library" class="pill o">Abrir mi librería</button>

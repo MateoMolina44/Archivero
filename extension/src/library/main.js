@@ -1,29 +1,31 @@
 // Librería de Archivero: una sola página que monta las pantallas del diseño y cambia de sección
 // sin recargar (evita el parpadeo que había en Claude Design).
 import './fonts.js';
+import './overrides.css';
 import { mount, start, unmount } from '../dc/runtime.js';
 import * as Main from '../screens/Main.js';
 import * as Main1 from '../screens/Main1.js';
 import * as Archivo from '../screens/Archivo.js';
 import * as Anotador from '../screens/Anotador.js';
 import * as Seleccion from '../screens/Seleccion.js';
-import { patchScreen } from './patches.js';
+import { prepareScreen } from './patches.js';
 import { drain } from './ingest.js';
 import { loadNotes, attachNotes, detachNotes } from './notes.js';
 import * as settings from '../core/settings.js';
 import { onChange } from '../core/db.js';
 
+const S = Object.fromEntries([Main, Main1, Archivo, Anotador, Seleccion].map((s) => [s.name, prepareScreen(s)]));
+
 // Ruta → pantalla. Tablero y Ajustes son Archivo arrancando en otro estado, como en el diseño.
 const ROUTES = {
-  Main: { screen: Main },
-  Main1: { screen: Main1 },
-  Archivo: { screen: Archivo },
-  Tablero: { screen: Archivo, init: (inst) => { inst.START = 'board'; } },
-  Ajustes: { screen: Archivo, after: (inst) => inst.openR() },
-  Anotador: { screen: Anotador, init: attachNotes, leave: detachNotes },
-  Seleccion: { screen: Seleccion },
+  Main: { screen: S.Main },
+  Main1: { screen: S.Main1 },
+  Archivo: { screen: S.Archivo },
+  Tablero: { screen: S.Archivo, init: (inst) => { inst.START = 'board'; } },
+  Ajustes: { screen: S.Archivo, after: (inst) => inst.openR() },
+  Anotador: { screen: S.Anotador, init: attachNotes, leave: detachNotes },
+  Seleccion: { screen: S.Seleccion },
 };
-for (const s of [Main, Main1, Archivo, Anotador, Seleccion]) patchScreen(s.Component);
 
 const host = document.getElementById('app');
 let current = null;
@@ -43,6 +45,7 @@ function show(route) {
     unmount(current);
   }
   const { screen, init, after, leave } = ROUTES[route];
+  host.dataset.screen = screen.name;
   const inst = mount(host, screen);
   inst._leave = leave;
   const commit = inst.commit;
@@ -50,6 +53,11 @@ function show(route) {
     this._dirty = true;
     syncBoards(this);
     return commit.apply(this, arguments);
+  };
+  const commitNow = inst.commitNow;
+  inst.commitNow = function () {
+    syncBoards(this);
+    return commitNow.apply(this, arguments);
   };
   if (init) init(inst);
   current = inst;

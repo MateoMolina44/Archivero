@@ -2,6 +2,7 @@ import { inboxAdd, mediaPut } from './core/db.js';
 import * as settings from './core/settings.js';
 import { applyRules } from './core/rules.js';
 import { uid, siteTags } from './core/util.js';
+import { embedOf } from './core/embeds.js';
 
 const MENUS = [
   { id: 'save-image', title: 'Guardar imagen en Archivero', contexts: ['image'] },
@@ -40,14 +41,25 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       await inboxAdd({ op: 'patch', id: msg.id, patch: msg.patch });
       return sendResponse({ ok: true });
     }
-    if (msg?.type === 'open-library') {
-      await chrome.tabs.create({ url: chrome.runtime.getURL('library.html') });
-      return sendResponse({ ok: true });
+    if (msg?.type === 'create-board') {
+      return sendResponse({ ok: true, boards: await createBoard(msg.name) });
     }
     sendResponse({ ok: false });
   })().catch((e) => sendResponse({ ok: false, error: String(e) }));
   return true; // respuesta asíncrona
 });
+
+// Tablero nuevo desde el popup o el aviso: queda en la lista enseguida y la librería lo crea al abrirse.
+async function createBoard(name) {
+  name = String(name || '').trim();
+  const s = await settings.load();
+  if (!name) return s.boards;
+  if (!s.boards.includes(name)) {
+    await settings.save({ boards: s.boards.concat(name) });
+    await inboxAdd({ op: 'board', name });
+  }
+  return settings.get().boards;
+}
 
 async function flashBadge(text, color, err) {
   if (err) console.error('[Archivero]', err);
@@ -63,12 +75,43 @@ async function readPageMeta(tabId) {
       target: { tabId },
       func: () => {
         const m = (n) => document.querySelector(`meta[property="${n}"],meta[name="${n}"]`)?.content || '';
-        return { title: m('og:title') || document.title || '', description: m('og:description') || m('description') || '' };
+        const img = m('og:image') || m('twitter:image');
+        return {
+          title: m('og:title') || document.title || '',
+          description: m('og:description') || m('description') || '',
+          image: img ? new URL(img, location.href).href : '',
+        };
       },
     });
     return res?.result || {};
   } catch {
     return {}; // chrome:// u otras páginas restringidas
+  }
+}
+
+// Metadatos de una página que no está abierta (enlace guardado con clic derecho).
+async function fetchPageMeta(url) {
+  if (!/^https?:/.test(url || '')) return {};
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const r = await fetch(url, { signal: ctl.signal });
+    if (!r.ok || !/html/.test(r.headers.get('content-type') || '')) return {};
+    const html = (await r.text()).slice(0, 400000);
+    const meta = (n) => {
+      const re = new RegExp(`<meta[^>]+(?:property|name)=["']${n}["'][^>]*>`, 'i');
+      const tag = html.match(re)?.[0] || '';
+      return (tag.match(/content=["']([^"']*)["']/i)?.[1] || '').replace(/&amp;/g, '&');
+    };
+    const img = meta('og:image') || meta('twitter:image');
+    return {
+      title: meta('og:title') || (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || '').trim(),
+      image: img ? new URL(img, r.url).href : '',
+    };
+  } catch {
+    return {};
+  } finally {
+    clearTimeout(timer);
   }
 }
 
@@ -85,12 +128,22 @@ async function fetchMedia(url, prefix, maxMB) {
   }
 }
 
+async function captureTab(tab) {
+  try {
+    const dataUrl = await chrome.tabs.captureVisibleTab(tab?.windowId, { format: 'jpeg', quality: 75 });
+    return await (await fetch(dataUrl)).blob();
+  } catch {
+    return null;
+  }
+}
+
 // ---------- armado de la pieza (formato del diseño) ----------
 async function handleSave(kind, info, tab) {
   const page = info.pageUrl || tab?.url || '';
   const pageTitle = tab?.title || '';
   let item;
   let blob = null;
+  let preview = null; // imagen de vista previa para enlaces
 
   if (kind === 'save-image') {
     blob = await fetchMedia(info.srcUrl, 'image/', 25);
@@ -98,13 +151,20 @@ async function handleSave(kind, info, tab) {
   } else if (kind === 'save-video') {
     blob = await fetchMedia(info.srcUrl, 'video/', 60);
     item = blob ? { kind: 'video', url: page, title: pageTitle } : { kind: 'link', url: page, title: pageTitle };
+    if (!blob && !embedOf(page)) preview = await captureTab(tab);
   } else if (kind === 'save-link') {
     item = { kind: 'link', url: info.linkUrl, title: info.linkText || '' };
+    if (!embedOf(info.linkUrl)) {
+      const meta = await fetchPageMeta(info.linkUrl);
+      if (!item.title) item.title = meta.title || '';
+      if (meta.image) preview = await fetchMedia(meta.image, 'image/', 8);
+    }
   } else if (kind === 'save-selection') {
     item = { kind: 'text', url: page, text: info.selectionText || '', title: '' };
   } else {
     const meta = tab?.id ? await readPageMeta(tab.id) : {};
     item = { kind: 'link', url: page, title: meta.title || pageTitle, note: meta.description || '' };
+    if (!embedOf(page)) preview = (meta.image && (await fetchMedia(meta.image, 'image/', 8))) || (await captureTab(tab));
   }
 
   item = Object.assign({ id: uid(), t: Date.now(), page, note: '', tags: '', text: '' }, item);
@@ -117,9 +177,12 @@ async function handleSave(kind, info, tab) {
     to = r.to;
     item.tags = r.tags.join(', ');
   }
+  // El tablero elegido en el popup manda sobre las reglas (las etiquetas se mantienen).
+  if (s.dest) to = s.dest;
   item.to = to;
 
   if (blob) await mediaPut(item.id, blob);
+  if (preview) { await mediaPut('prev:' + item.id, preview); item.pv = true; }
   await inboxAdd({ op: 'add', item });
   await flashBadge('✓', '#575757');
   if (tab?.id && settings.pref(s, settings.PREF_SHOW_TOAST)) await showToast(tab.id, item, s);
@@ -127,7 +190,7 @@ async function handleSave(kind, info, tab) {
 
 // ---------- aviso en la página (Extension.dc.html) ----------
 async function showToast(tabId, item, s) {
-  const boards = s.boards.includes('Sin clasificar') ? s.boards : s.boards.concat('Sin clasificar');
+  const boards = s.boards.filter((b) => b !== 'Sin clasificar').concat('Sin clasificar');
   const payload = { id: item.id, board: item.to || 'Sin clasificar', tags: item.tags, boards };
   try {
     await chrome.scripting.executeScript({ target: { tabId }, func: injectToast, args: [payload] });
@@ -138,6 +201,7 @@ async function showToast(tabId, item, s) {
 
 // Se ejecuta DENTRO de la página: debe ser autocontenida (sin imports ni variables de afuera).
 function injectToast(p) {
+  const SHOW_MS = 5000;
   document.getElementById('archivero-toast-host')?.remove();
   const host = document.createElement('div');
   host.id = 'archivero-toast-host';
@@ -153,54 +217,92 @@ function injectToast(p) {
     @keyframes out{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(18px) scale(.98)}}
     .r{display:flex;align-items:center;gap:12px}
     .msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .ch{background:#d9d9d9;color:#111;border:0;border-radius:20px;padding:6px 14px;font:600 12px Inter,system-ui,sans-serif;cursor:pointer;transition:transform .15s,background-color .15s}
+    .ch{background:#d9d9d9;color:#111;border:0;border-radius:20px;padding:6px 14px;font:600 12px Inter,system-ui,sans-serif;cursor:pointer;flex:none;transition:transform .15s,background-color .15s}
     .ch:hover{background:#fff;transform:scale(1.04)}
     .x{background:none;border:0;color:#fff;opacity:.7;font-size:16px;cursor:pointer;padding:0 4px;line-height:1}
     .x:hover{opacity:1}
     .ch:focus-visible,.x:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #fff;outline-offset:2px}
     .f{display:none;margin-top:12px;gap:8px;flex-direction:column}
     .open .f{display:flex}
+    .nb{display:none;gap:8px}
+    .nb.on{display:flex}
     label{font-size:11px;font-weight:600;opacity:.85}
     select,input{width:100%;height:34px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:#464646;color:#fff;font:13px Inter,system-ui,sans-serif;padding:0 14px;outline:none}
+    select:focus,input:focus{border-color:#fff}
     select option{color:#111}
+    .hint{font-size:11px;opacity:.8}
   `;
   root.innerHTML = `<style>${css}</style>
     <div class="t" role="status">
       <div class="r"><span class="msg"></span><button class="ch">Cambiar</button><button class="x" aria-label="Cerrar">×</button></div>
       <div class="f">
         <label>Tablero</label><select aria-label="Tablero"></select>
-        <label>Etiquetas (separadas por coma)</label><input type="text" aria-label="Etiquetas" />
+        <div class="nb"><input class="nbi" type="text" maxlength="40" placeholder="Nombre del tablero nuevo" aria-label="Nombre del tablero nuevo" /><button class="ch nbo">Crear</button></div>
+        <div class="hint" hidden>Todavía no tenés tableros: creá uno para guardar acá.</div>
+        <label>Etiquetas (separadas por coma)</label><input class="tg" type="text" aria-label="Etiquetas" />
       </div>
     </div>`;
-  const box = root.querySelector('.t');
-  const msg = root.querySelector('.msg');
-  const select = root.querySelector('select');
-  const input = root.querySelector('input');
-  const state = { board: p.board, tags: p.tags };
+  const $ = (s) => root.querySelector(s);
+  const box = $('.t');
+  const msg = $('.msg');
+  const select = $('select');
+  const tagsIn = $('.tg');
+  const newRow = $('.nb');
+  const newIn = $('.nbi');
+  const state = { board: p.board, tags: p.tags, boards: p.boards.slice() };
   const render = () => {
     const tags = state.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => '#' + t).join(' ');
     msg.innerHTML = '<b>Guardado</b> en ';
     msg.append(state.board + (tags ? ' · ' + tags : ''));
   };
-  for (const b of p.boards) select.appendChild(new Option(b, b, false, b === p.board));
-  input.value = p.tags;
+  const fillBoards = () => {
+    select.replaceChildren();
+    for (const b of state.boards) select.appendChild(new Option(b, b, false, b === state.board));
+    select.appendChild(new Option('+ Nuevo tablero…', '__new'));
+    const none = state.boards.every((b) => b === 'Sin clasificar');
+    $('.hint').hidden = !none;
+    if (none) newRow.classList.add('on');
+  };
+  fillBoards();
+  tagsIn.value = p.tags;
   render();
 
+  // Se va a los 5 s. Pasar el mouse lo pausa; cada cambio vuelve a contar 5 s.
   let timer;
-  const close = () => { box.classList.add('out'); setTimeout(() => host.remove(), 300); };
-  const arm = () => { clearTimeout(timer); timer = setTimeout(close, 7000); };
+  let hovering = false;
+  const close = () => { clearTimeout(timer); box.classList.add('out'); setTimeout(() => host.remove(), 300); };
+  const arm = () => { clearTimeout(timer); if (!hovering) timer = setTimeout(close, SHOW_MS - 300); }; // 300 ms de salida
   const send = (patch) => chrome.runtime.sendMessage({ type: 'patch-item', id: p.id, patch });
-  root.querySelector('.ch').addEventListener('click', () => { box.classList.toggle('open'); select.focus(); });
-  root.querySelector('.x').addEventListener('click', close);
-  select.addEventListener('change', () => { state.board = select.value; render(); send({ board: select.value }); });
-  input.addEventListener('change', () => {
-    state.tags = input.value.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean).join(', ');
+  const pickBoard = (name) => { state.board = name; render(); send({ board: name }); arm(); };
+  const createBoard = async () => {
+    const name = newIn.value.trim();
+    if (!name) return;
+    const res = await chrome.runtime.sendMessage({ type: 'create-board', name });
+    if (res?.boards) state.boards = res.boards.filter((b) => b !== 'Sin clasificar').concat('Sin clasificar');
+    state.board = name;
+    newIn.value = '';
+    newRow.classList.remove('on');
+    fillBoards();
+    pickBoard(name);
+  };
+  $('.ch').addEventListener('click', () => { box.classList.toggle('open'); arm(); });
+  $('.x').addEventListener('click', close);
+  select.addEventListener('change', () => {
+    if (select.value === '__new') { newRow.classList.add('on'); newIn.focus(); select.value = state.board; arm(); return; }
+    pickBoard(select.value);
+  });
+  $('.nbo').addEventListener('click', createBoard);
+  newIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') createBoard(); });
+  newIn.addEventListener('input', arm);
+  tagsIn.addEventListener('input', arm);
+  tagsIn.addEventListener('change', () => {
+    state.tags = tagsIn.value.split(',').map((t) => t.trim().replace(/^#/, '')).filter(Boolean).join(', ');
     render();
     send({ tags: state.tags });
+    arm();
   });
-  host.addEventListener('mouseenter', () => clearTimeout(timer));
-  host.addEventListener('mouseleave', arm);
-  host.addEventListener('focusin', () => clearTimeout(timer));
+  host.addEventListener('mouseenter', () => { hovering = true; clearTimeout(timer); });
+  host.addEventListener('mouseleave', () => { hovering = false; arm(); });
   document.documentElement.appendChild(host);
   arm();
 }

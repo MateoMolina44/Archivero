@@ -22,6 +22,8 @@ export const DEFAULTS = {
   ],
   // Nombres de los tableros, copiados por la librería para el aviso de la extensión.
   boards: [],
+  // Tablero donde guarda la extensión. Vacío = automático (lo deciden las reglas).
+  dest: '',
 };
 
 const hasChrome = typeof chrome !== 'undefined' && !!chrome.storage?.local;

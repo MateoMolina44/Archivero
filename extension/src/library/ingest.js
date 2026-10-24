@@ -17,6 +17,7 @@ export async function drain(inst) {
     for (const { op } of ops) {
       if (op.op === 'add' && !L.items.some((x) => x.id === op.item.id)) await addItem(inst, op.item);
       else if (op.op === 'patch') patchItem(inst, op.id, op.patch);
+      else if (op.op === 'board') boardByName(inst, op.name);
     }
     inst.commitNow();
     await inboxDel(ops.map((o) => o.key));

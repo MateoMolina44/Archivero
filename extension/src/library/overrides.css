@@ -1,0 +1,15 @@
+/* Ajustes visuales sobre el CSS del diseño (que se inyecta después, por eso los !important). */
+
+/* Buscador: texto fijo, sin brillo animado. */
+.shm { animation: none !important; background: none !important; color: #ececec !important; -webkit-text-fill-color: #ececec !important; }
+
+/* Anotador: su pantalla es un escenario de 1440×900 escalado; el velo de Reglas y ajustes y el de
+   los diálogos tienen que cubrir toda la ventana, no solo el escenario. */
+#app[data-screen="Anotador"] .rz .rz-v,
+#app[data-screen="Anotador"] .mdl {
+  inset: auto !important;
+  left: -100vmax !important;
+  top: -100vmax !important;
+  width: calc(100% + 200vmax) !important;
+  height: calc(100% + 200vmax) !important;
+}

@@ -2,38 +2,56 @@ import * as settings from './core/settings.js';
 import './popup-fonts.js';
 
 const $ = (id) => document.getElementById(id);
-const select = $('project');
+const project = $('project');
+const board = $('board');
 const status = $('status');
+const UNSORTED = 'Sin clasificar';
 
 async function render() {
   const s = await settings.load();
-  select.innerHTML = '';
-  if (!s.projs.length) select.appendChild(new Option('Sin proyectos', ''));
-  s.projs.forEach((p, i) => select.appendChild(new Option(p, String(i), false, i === s.proj)));
+  project.replaceChildren();
+  if (!s.projs.length) project.appendChild(new Option('Sin proyectos', ''));
+  s.projs.forEach((p, i) => project.appendChild(new Option(p, String(i), false, i === s.proj)));
+
+  const boards = s.boards.filter((b) => b !== UNSORTED);
+  board.replaceChildren(new Option('Automático (según tus reglas)', ''));
+  boards.forEach((b) => board.appendChild(new Option(b, b, false, b === s.dest)));
+  board.appendChild(new Option(UNSORTED, UNSORTED, false, s.dest === UNSORTED));
+  if (s.dest && !boards.includes(s.dest) && s.dest !== UNSORTED) board.appendChild(new Option(s.dest, s.dest, false, true));
+  $('board-hint').hidden = boards.length > 0;
 }
 
-select.addEventListener('change', () => {
-  if (select.value !== '') settings.save({ proj: Number(select.value) });
+project.addEventListener('change', () => {
+  if (project.value !== '') settings.save({ proj: Number(project.value) });
 });
+board.addEventListener('change', () => settings.save({ dest: board.value }));
 
-// (window.prompt no funciona en popups de extensión, por eso un input propio)
-$('new-project').addEventListener('click', () => {
-  $('new-row').hidden = false;
-  $('new-name').focus();
-});
+// (window.prompt no funciona en popups de extensión, por eso inputs propios)
+function inlineCreate(button, row, input, ok, create) {
+  button.addEventListener('click', () => { row.hidden = !row.hidden; if (!row.hidden) input.focus(); });
+  const go = async () => {
+    const name = input.value.trim();
+    if (!name) return;
+    await create(name);
+    input.value = '';
+    row.hidden = true;
+    await render();
+  };
+  ok.addEventListener('click', go);
+  input.addEventListener('keydown', (e) => e.key === 'Enter' && go());
+}
 
-async function createProject() {
-  const name = $('new-name').value.trim();
-  if (!name) return;
+inlineCreate($('new-project'), $('new-row'), $('new-name'), $('new-ok'), async (name) => {
   const s = settings.get();
   const projs = s.projs.includes(name) ? s.projs : s.projs.concat(name);
   await settings.save({ projs, proj: projs.indexOf(name) });
-  $('new-name').value = '';
-  $('new-row').hidden = true;
-  await render();
-}
-$('new-ok').addEventListener('click', createProject);
-$('new-name').addEventListener('keydown', (e) => e.key === 'Enter' && createProject());
+});
+
+inlineCreate($('new-board'), $('board-row'), $('board-name'), $('board-ok'), async (name) => {
+  await chrome.runtime.sendMessage({ type: 'create-board', name });
+  await settings.load();
+  await settings.save({ dest: name });
+});
 
 $('save-page').addEventListener('click', async () => {
   status.textContent = 'Guardando…';
