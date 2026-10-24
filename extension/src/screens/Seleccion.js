@@ -1,0 +1,276 @@
+// GENERADO por scripts/import-design.mjs desde diseno/project/Seleccion.dc.html — no editar a mano.
+import { DCLogic } from '../dc/runtime.js';
+
+export const name = "Seleccion";
+export const props = {};
+export const css = "body{margin:0}\n.sec{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:9;height:44px}\n.sec-c,.sec-x{background:var(--pill);border-radius:30px;height:44px;display:flex;align-items:center;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)}\n.sec-c{gap:12px;padding:0 12px}\n.sec-x{gap:8px;padding:0 7px;white-space:nowrap}\n.sec-l,.sec-r{position:absolute;bottom:0;height:44px;opacity:0;visibility:hidden;pointer-events:none;filter:blur(4px);transition:opacity .25s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1),filter .35s cubic-bezier(.4,0,.2,1),visibility 0s .45s}\n.sec-l{right:100%;padding-right:8px;transform:translateX(18px) scale(.85);transform-origin:right center}\n.sec-r{left:100%;padding-left:8px;transform:translateX(-18px) scale(.85);transform-origin:left center}\n.sec:hover .sec-l,.sec:hover .sec-r,.sec:focus-within .sec-l,.sec:focus-within .sec-r,.sec.show .sec-l,.sec.show .sec-r{opacity:1;visibility:visible;pointer-events:auto;transform:none;filter:none;transition-delay:0s}\n.sec button{border:0;padding:0;background:none;font:inherit;cursor:pointer}\n.sec a>span,.sec button>span{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}\n.sec a:hover>span,.sec button:hover>span{background:#fff!important;transform:scale(1.08)}\n.sec a:active>span,.sec button:active>span{transform:scale(.95)}\n.sec a:focus-visible,.sec button:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}\n@media (prefers-reduced-motion:reduce){.sec-l,.sec-r,.sec a>span,.sec button>span{transition-duration:.01ms!important}}\n.sb{position:absolute;left:50%;top:20px;width:320px;transform:translateX(-50%);transition:width .5s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1);border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)}\n.sb:hover,.sb:focus-visible{background:var(--pillh)!important}\n.sb:active{transform:translateX(-50%) scale(.98)}\n.sb:focus-visible{outline:2px solid #fff;outline-offset:3px}\n.sb svg{transition:transform .5s cubic-bezier(.4,0,.2,1)}.sb:hover svg{transform:scale(1.12)}\n.shm{white-space:nowrap;color:transparent;-webkit-text-fill-color:transparent;background-image:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.95) 50%,transparent 65%),linear-gradient(#c9c9c9,#c9c9c9);background-size:250% 100%,auto;background-clip:text;-webkit-background-clip:text;animation:shm 2.2s linear infinite}\n@keyframes shm{0%{background-position:100% center,0 0}100%{background-position:0% center,0 0}}\n@keyframes enter{0%{opacity:0;filter:blur(2px)}100%{opacity:1;filter:blur(0)}}\n@keyframes scale-in{0%{opacity:0;transform:scale(.95)}100%{opacity:1;transform:scale(1)}}\n@keyframes slide-in{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}\n@media (prefers-reduced-motion:reduce){.sec-c,.sec-x,.sb,.shm,.sec-x a>span{transition-duration:.01ms!important;animation:none!important}}\n.cur{display:inline-block;width:.5em;height:.85em;background:currentColor;vertical-align:-.08em;margin-left:2px}\n@keyframes bar-in{0%{margin-left:-160px;width:320px}100%{margin-left:-230px;width:460px}}\n@keyframes bar-out{0%{margin-left:-230px;width:460px}100%{margin-left:-160px;width:320px}}\n@keyframes drop-in{0%{opacity:0;clip-path:inset(0 0 100% 0)}100%{opacity:1;clip-path:inset(0 0 0 0)}}\n@keyframes drop-out{0%{opacity:1;clip-path:inset(0 0 0 0)}100%{opacity:0;clip-path:inset(0 0 100% 0)}}\n@keyframes slide-out{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(24px)}}\n@keyframes fade-out{0%{opacity:1}100%{opacity:0}}\n.bz .velo{animation:enter .35s cubic-bezier(.4,0,.2,1) both}\n.bz .panel{animation:bar-in .5s cubic-bezier(.4,0,.2,1) both}\n.bz .pin{animation:drop-in .5s cubic-bezier(.4,0,.2,1) .12s both}\n.bz .chip,.bz .vt{animation:slide-in .5s cubic-bezier(.4,0,.2,1) both;animation-delay:var(--d)}\n.bz.out .panel{animation:bar-out .45s cubic-bezier(.4,0,.2,1) .15s both!important}.bz.out .pin{animation:drop-out .3s cubic-bezier(.4,0,.2,1) both!important}.bz.out .chip,.bz.out .vt{animation:slide-out .3s cubic-bezier(.4,0,.2,1) both!important}.bz.out .velo{animation:fade-out .45s cubic-bezier(.4,0,.2,1) .1s both!important}\n.chip{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}.chip:hover{background:#fff!important;transform:scale(1.04)}.chip:active{transform:scale(.95)}\n.vt{transition:transform .7s cubic-bezier(.4,0,.2,1)}.vt:hover{transform:scale(1.04)}\n.x{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}.x:hover{background:#fff!important;transform:scale(1.08)}.x:active{transform:scale(.95)}\n.x:focus-visible{outline:2px solid #fff;outline-offset:2px}\n.fv{font-size:14px;position:relative;display:inline-block;color:#fff;text-decoration:none}\n.fv::after{content:\"\";position:absolute;left:0;bottom:-2px;width:100%;height:1px;background:currentColor;transform:scaleX(0);transform-origin:right center;transition:transform .7s cubic-bezier(.19,1,.22,1)}\n.fv:hover::after{transform:scaleX(1);transform-origin:left center}\n@media (prefers-reduced-motion:reduce){.bz .velo,.bz .panel,.bz .pin,.bz .chip,.bz .vt,.bz.out .panel,.bz.out .pin,.bz.out .chip,.bz.out .vt,.bz.out .velo{animation-duration:.01ms!important;animation-delay:0s!important}}\n.rz-tag{display:inline-block;background:var(--chip);color:#111;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin:0 6px 6px 0}\n.ob{height:32px;min-width:32px;padding:0 12px;border-radius:30px;background:var(--chip);color:#111;border:0;font:inherit;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}\n.ob:hover{background:#fff;transform:scale(1.05)}.ob:active{transform:scale(.95)}.ob:focus-visible{outline:2px solid #fff;outline-offset:2px}\n.pn{background:var(--pill);border-radius:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.12);color:#fff}\n.mdl{animation:enter .35s cubic-bezier(.4,0,.2,1) both}.mdl .box{animation:scale-in .5s cubic-bezier(.19,1,.22,1) both}\n.in{width:100%;box-sizing:border-box;height:40px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:var(--field);color:#fff;font:inherit;font-size:14px;padding:0 16px;outline:none}\n.in:focus{border-color:#fff}\n.lbl{display:block;font-size:12px;font-weight:600;margin:14px 0 6px}\n.ta3{height:auto;min-height:88px;border-radius:14px;padding:10px 16px;resize:vertical;line-height:1.5;display:block}\n.sel3{appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,#fff 50%),linear-gradient(135deg,#fff 50%,transparent 50%);background-position:calc(100% - 20px) 17px,calc(100% - 15px) 17px;background-size:5px 5px;background-repeat:no-repeat;padding-right:36px}\n.sel3 option{color:#111}\n.rz-tag{display:inline-block;background:var(--chip);color:#111;border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;margin:0 6px 6px 0}\n@keyframes mdl-out{0%{opacity:1}100%{opacity:0}}\n@keyframes box-out{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(10px) scale(.96)}}\n.mdl.out{animation:mdl-out .32s cubic-bezier(.4,0,.2,1) both!important;pointer-events:none}.mdl.out .box{animation:box-out .32s cubic-bezier(.4,0,.2,1) both!important}\n\n:root{--bg:#d9d9d9;--t1:#afafaf;--t2:#a7a7a7;--t3:#b7b7b7;--t4:#a3a3a3;--pill:#575757;--pillh:#626262;--chip:#d9d9d9;--muted:#575757;--field:#464646;--sw:#838383;--velo:rgba(217,217,217,.55);--ink:#111;--f1:'Inter',system-ui,sans-serif;--f2:'Inter',system-ui,sans-serif}\nh1,h2,b,strong,[style*=\"font-weight:700\"],.tt{font-family:var(--f1)}\nbutton,input,textarea,select{font-family:inherit}\n.sec-c,.sec-x{line-height:0}\n.sec-c>*,.sec-x>*{display:flex;align-items:center;justify-content:center;flex:none}\n.sec [data-tip]{position:relative}\n.sec [data-tip]::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 17px);transform:translate(-50%,4px);background:var(--pill);color:#fff;font:600 12px/1 var(--f2);padding:7px 10px;border-radius:8px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1);box-shadow:0 3px 12px rgba(0,0,0,.15)}\n.sec a:hover [data-tip]::after,.sec button:hover [data-tip]::after,.sec a:focus-visible [data-tip]::after,.sec button:focus-visible [data-tip]::after,.sec [aria-current]:hover [data-tip]::after{opacity:1;transform:translate(-50%,0)}\n@keyframes x-in{0%{opacity:0;transform:scale(.4) rotate(-90deg)}100%{opacity:1;transform:none}}\n@keyframes x-out{0%{opacity:1;transform:none}100%{opacity:0;transform:scale(.4) rotate(90deg)}}\n.bz .x{animation:x-in .45s cubic-bezier(.19,1,.22,1) .18s backwards}\n.bz.out .x{animation:x-out .28s cubic-bezier(.4,0,.2,1) both!important}\n@keyframes scr-in{0%{opacity:0}100%{opacity:1}}\n[data-scr]:not([data-in=\"0\"])>:not(.sec):not(.sb):not(.bz):not(.rz):not(.mdl):not(.mn){animation:scr-in .5s cubic-bezier(.4,0,.2,1) backwards}\n@media (prefers-reduced-motion:reduce){.bz .x,.bz.out .x{animation:none!important}.sec [data-tip]::after{transition:none}[data-scr]>*{animation:none!important}}";
+export const template = "<div ref=\"{{stageFit}}\" style=\"position:relative;width:100%;height:100vh;overflow:hidden;background:var(--bg);{{uiVars}}\">\n<div data-scr data-in=\"{{scrIn}}\" data-leave=\"{{leaving}}\" style=\"position:absolute;left:50%;top:50%;width:1440px;height:900px;margin:-450px 0 0 -720px;transform:scale({{fs}});transform-origin:center center;background:var(--bg);overflow:hidden;font-family:var(--f2);color:var(--ink)\">\n\n  <sc-if value=\"{{noSel}}\" hint-placeholder-val=\"{{false}}\"><div style=\"position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;color:var(--muted)\">\n    <div style=\"font-size:28px;font-weight:700\">No hay ninguna pieza abierta</div>\n    <div style=\"font-size:14px;line-height:1.5;max-width:440px\">Abrí una pieza desde un tablero o desde la pantalla principal y tocá «Ver ficha completa».</div>\n  </div></sc-if>\n  <a ref=\"{{backRef}}\" href=\"Main.dc.html\" tabindex=\"-1\" aria-hidden=\"true\" style=\"position:absolute;width:1px;height:1px;overflow:hidden;opacity:0\">volver</a>\n  <!-- Pieza: ver y editar -->\n  <sc-if value=\"{{edOn}}\" hint-placeholder-val=\"{{false}}\">\n    <div class=\"mdl {{xEd}}\" style=\"position:absolute;inset:0;z-index:30;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center\">\n      <button onClick=\"{{edClose}}\" aria-label=\"Cerrar pieza\" tabindex=\"-1\" style=\"position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;background:transparent;cursor:default\"></button>\n      <div class=\"pn box\" role=\"dialog\" aria-label=\"{{pe.title}}\" style=\"position:relative;width:min(1240px,calc(100% - 48px));height:min(716px,calc(100% - 120px));display:flex;overflow:hidden\">\n        <div style=\"flex:1;min-width:0;background:var(--field);display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box\">\n          <sc-if value=\"{{pe.isImg}}\" hint-placeholder-val=\"{{true}}\"><img src=\"{{pe.src}}\" alt=\"{{pe.title}}\" style=\"max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;display:block\"></sc-if><sc-if value=\"{{pe.isVid}}\" hint-placeholder-val=\"{{false}}\"><video src=\"{{pe.src}}\" ref=\"{{vref}}\" muted loop playsinline controls style=\"max-width:100%;max-height:100%;border-radius:6px;display:block\"></video></sc-if>\n          <sc-if value=\"{{pe.isLink}}\" hint-placeholder-val=\"{{false}}\"><div style=\"text-align:center;max-width:560px\"><div style=\"font-size:13px\">{{pe.dom}}</div><div style=\"font-size:30px;font-weight:700;margin:10px 0 22px;overflow-wrap:anywhere\">{{pe.title}}</div><a class=\"ob\" href=\"{{pe.href}}\" target=\"_blank\" rel=\"noopener\" style=\"display:inline-flex;text-decoration:none\">Abrir sitio</a></div></sc-if>\n          <sc-if value=\"{{pe.isText}}\" hint-placeholder-val=\"{{false}}\"><textarea class=\"in ta3\" rows=\"14\" value=\"{{pe.text}}\" onInput=\"{{pe.onText}}\" aria-label=\"Texto guardado\" style=\"height:100%;border-radius:12px;font-size:16px;resize:none\"></textarea></sc-if>\n        </div>\n        <div style=\"width:440px;flex:none;padding:22px 24px;box-sizing:border-box;display:flex;flex-direction:column;overflow:auto\">\n          <div style=\"display:flex;align-items:center;justify-content:space-between\"><div style=\"font-size:13px;font-weight:600\">{{pe.kind}} · {{pe.date}}<span style=\"display:block;font-size:11px;font-weight:400;opacity:.85;margin-top:2px\">{{pe.size}}</span></div><button class=\"ob\" onClick=\"{{edClose}}\" aria-label=\"Cerrar pieza\" style=\"width:32px;padding:0\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.6\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M2 2l8 8M10 2l-8 8\"/></svg></button></div>\n          <label class=\"lbl\" for=\"ed-ti\">Título</label>\n          <input class=\"in\" id=\"ed-ti\" value=\"{{pe.title}}\" onInput=\"{{pe.onTitle}}\" placeholder=\"Sin título\">\n          <label class=\"lbl\" for=\"ed-no\">Nota</label>\n          <textarea class=\"in ta3\" id=\"ed-no\" rows=\"3\" value=\"{{pe.note}}\" onInput=\"{{pe.onNote}}\" placeholder=\"Por qué lo guardaste, dónde lo vas a usar…\"></textarea>\n          <label class=\"lbl\" for=\"ed-ur\">Sitio web</label>\n          <input class=\"in\" id=\"ed-ur\" value=\"{{pe.url}}\" onInput=\"{{pe.onUrl}}\" placeholder=\"https://…\">\n          <sc-if value=\"{{pe.hasAuto}}\" hint-placeholder-val=\"{{false}}\"><div style=\"font-size:12px;font-weight:600;margin:14px 0 6px\">Etiquetas automáticas (por el sitio)</div><div><sc-for list=\"{{pe.auto}}\" as=\"g\" hint-placeholder-count=\"2\"><span class=\"rz-tag\">#{{g.t}}</span></sc-for></div></sc-if>\n          <label class=\"lbl\" for=\"ed-tg\">Tus etiquetas</label>\n          <input class=\"in\" id=\"ed-tg\" value=\"{{pe.tags}}\" onInput=\"{{pe.onTags}}\" placeholder=\"paleta, hud (separadas por coma)\">\n          <label class=\"lbl\" for=\"ed-bo\">Tablero</label>\n          <select class=\"in sel3\" id=\"ed-bo\" onChange=\"{{pe.onBoard}}\"><sc-for list=\"{{pe.bopts}}\" as=\"o\" hint-placeholder-count=\"2\"><option value=\"{{o.v}}\" selected=\"{{o.sel}}\">{{o.l}}</option></sc-for></select>\n          <div style=\"font-size:12px;margin-top:10px;opacity:.85\">Los cambios se guardan solos.</div>\n          <div style=\"flex:1;min-height:16px\"></div>\n          <div style=\"display:flex;gap:8px;justify-content:space-between\">\n            <button class=\"ob\" onClick=\"{{pe.del}}\" style=\"background:transparent;color:#fff;border:1px solid rgba(255,255,255,.3)\">{{pe.delLbl}}</button>\n            <button class=\"ob\" onClick=\"{{edClose}}\">Listo</button>\n          </div>\n        </div>\n      </div>\n    </div>\n  </sc-if>\n<!--FICHA-->  <!-- Buscador -->\n    <button class=\"sb\" onClick=\"{{openS}}\" aria-label=\"Abrir buscador\" style=\"position:absolute;top:20px;height:40px;background:var(--pill);border-radius:30px;display:flex;align-items:center;gap:10px;padding:0 16px;box-sizing:border-box;font-size:14px;font-family:inherit;color:#fff;z-index:9;cursor:pointer\">\n    <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.4\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"4.5\"/><path d=\"M10.5 10.5L14 14\"/></svg>\n    <span class=\"shm\">{{s.t}}</span><sc-if value=\"{{s.c}}\" hint-placeholder-val=\"{{false}}\"><span class=\"cur\"></span></sc-if>\n  </button>\n\n  <!-- Botón de sección: las 3 secciones siempre visibles (la actual resaltada); al hover aparecen herramientas y ajustes -->\n  <div class=\"sec\"><div class=\"sec-l\"><div class=\"sec-x\"><span aria-label=\"Nuevo tablero\" style=\"display:flex\"><span data-tip=\"Nuevo tablero\" style=\"width:30px;height:30px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 3v10M3 8h10\"/></svg></span></span><span aria-label=\"Ordenar\" style=\"display:flex\"><span data-tip=\"Ordenar\" style=\"width:30px;height:30px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2 4h12M4 8h8M6 12h4\"/></svg></span></span></div></div><div class=\"sec-c\"><a href=\"Main.dc.html\" onClick=\"{{navOut}}\" aria-label=\"Principal\" style=\"display:flex\"><span data-tip=\"Principal\" style=\"width:30px;height:30px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"2\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"9\" y=\"2\" width=\"5\" height=\"5\" rx=\"1\"/><rect x=\"2\" y=\"9\" width=\"12\" height=\"5\" rx=\"1\"/></svg></span></a><span aria-label=\"Archivo (sección actual)\" aria-current=\"page\" style=\"display:flex\"><span data-tip=\"Archivo\" style=\"width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:0 0 0 2px var(--pill),0 0 0 4px #fff;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><rect x=\"2\" y=\"2.5\" width=\"12\" height=\"4.5\" rx=\"1.2\"/><rect x=\"2\" y=\"9\" width=\"12\" height=\"4.5\" rx=\"1.2\"/></svg></span></span><a href=\"Anotador.dc.html\" onClick=\"{{navOut}}\" aria-label=\"Anotador\" style=\"display:flex\"><span data-tip=\"Anotador\" style=\"width:30px;height:30px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z\"/></svg></span></a></div><div class=\"sec-r\"><div class=\"sec-x\"><span aria-label=\"Reglas y ajustes\" style=\"display:flex\"><span data-tip=\"Reglas y ajustes\" style=\"width:30px;height:30px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.4\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><circle cx=\"8\" cy=\"8\" r=\"2.2\"/><path d=\"M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4\"/></svg></span></span></div></div></div>\n  <sc-if value=\"{{sOn}}\" hint-placeholder-val=\"{{false}}\">\n  <div class=\"{{sCls}}\" style=\"position:absolute;inset:0;z-index:40\">\n    <button class=\"velo\" onClick=\"{{closeS}}\" aria-label=\"Cerrar buscador\" style=\"position:absolute;inset:0;width:100%;height:100%;background:var(--velo);border:0;padding:0;cursor:default\"></button>\n    <div class=\"panel\" style=\"position:absolute;left:50%;margin-left:-230px;top:20px;width:460px;transform-origin:top center;color:#fff\">\n      <div style=\"height:40px;background:var(--pill);border-radius:30px;display:flex;align-items:center;gap:10px;padding:0 6px 0 16px;box-sizing:border-box;font-size:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)\">\n        <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" stroke=\"#fff\" stroke-width=\"1.4\" stroke-linecap=\"round\" aria-hidden=\"true\"><circle cx=\"7\" cy=\"7\" r=\"4.5\"/><path d=\"M10.5 10.5L14 14\"/></svg>\n        <span style=\"flex:1;color:#ececec\">Buscar en Tablero #1…</span>\n        <button class=\"x\" onClick=\"{{closeS}}\" aria-label=\"Cerrar buscador\" style=\"width:28px;height:28px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;border:0;padding:0;cursor:pointer\"><svg width=\"12\" height=\"12\" viewBox=\"0 0 12 12\" fill=\"none\" stroke=\"#111\" stroke-width=\"1.6\" stroke-linecap=\"round\" aria-hidden=\"true\"><path d=\"M2 2l8 8M10 2l-8 8\"/></svg></button>\n      </div>\n      <div class=\"pin\" style=\"margin-top:6px;background:var(--pill);border-radius:14px;padding:14px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08);\">\n        <div style=\"display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:10px\"><span>Recientes</span></div>\n        <div style=\"font-size:12px;opacity:.8\">Todavía no buscaste nada.</div>\n        <div style=\"font-size:11px;font-weight:600;margin:16px 0 10px\">Guardado recientemente</div>\n        <sc-if value=\"{{srecNone}}\" hint-placeholder-val=\"{{true}}\"><div style=\"font-size:12px;opacity:.8\">Lo que guardes va a aparecer acá.</div></sc-if><div style=\"display:flex;gap:8px;overflow:hidden;margin-right:-14px\"><sc-for list=\"{{srec}}\" as=\"v\" hint-placeholder-count=\"0\"><div class=\"vt\" style=\"flex:none;width:110px;height:72px;background:var(--chip);border-radius:6px;overflow:hidden;--d:{{v.d}};\"><sc-if value=\"{{v.isImg}}\" hint-placeholder-val=\"{{false}}\"><img src=\"{{v.src}}\" alt=\"{{v.title}}\" style=\"width:100%;height:100%;object-fit:cover;display:block\"></sc-if><sc-if value=\"{{v.isVid}}\" hint-placeholder-val=\"{{false}}\"><video src=\"{{v.src}}\" ref=\"{{vref}}\" muted loop playsinline style=\"width:100%;height:100%;object-fit:cover;display:block\"></video></sc-if><sc-if value=\"{{v.noImg}}\" hint-placeholder-val=\"{{false}}\"><span style=\"display:block;height:100%;box-sizing:border-box;padding:8px;font-size:11px;font-weight:600;line-height:1.25;color:#111;overflow:hidden\">{{v.title}}</span></sc-if></div></sc-for></div>\n      </div>\n    </div>\n  </div>\n  </sc-if>\n</div>\n</div>";
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tn: 0, sq: 'off' };
+  }
+  componentDidMount() {
+    this.tiv = setInterval(() => {
+      const tn = this.state.tn + 1;
+      this.setState({ tn });
+      if (tn >= 140) clearInterval(this.tiv);
+    }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.tiv); clearTimeout(this.t3); }
+  lib() {
+    if (!this._lib) {
+      let d = null;
+      try { const r = window.localStorage.getItem('archivero.lib.v1'); if (r) d = JSON.parse(r); } catch (e) { d = null; }
+      if (!d || !Array.isArray(d.boards) || !Array.isArray(d.items)) d = { boards: [], items: [], bsort: 'recent', bman: [], seq: 1, last: null };
+      this._lib = d;
+      if (!this._lw) { this._lw = true; try { window.addEventListener('storage', (e) => { if (e.key === 'archivero.lib.v1') { this._lib = null; this._ml = false; this.forceUpdate(); } if (e.key === 'archivero.ui.v1') { this._ui = null; this.forceUpdate(); } }); } catch (e) {} this.mediaDB(() => {}); try { window.addEventListener('resize', () => this.forceUpdate()); } catch (e) {} }
+    }
+    return this._lib;
+  }
+  uid() { const L = this.lib(); L.seq = (L.seq || 1) + 1; return 'p' + Date.now().toString(36) + L.seq; }
+  commit() { this.setState({ lrev: (this.state.lrev || 0) + 1 }); clearTimeout(this.wt); this.wt = setTimeout(() => { try { window.localStorage.setItem('archivero.lib.v1', JSON.stringify(this.lib())); } catch (e) {} }, 300); }
+  mediaDB(cb) {
+    if (this._db) return cb(this._db);
+    if (this._dbFail) return cb(null);
+    if (this._dbq) { this._dbq.push(cb); return; }
+    this._dbq = [cb];
+    const done = (db) => { const q = this._dbq || []; this._dbq = null; q.forEach((f) => f(db)); };
+    try {
+      const rq = window.indexedDB.open('archivero', 1);
+      rq.onupgradeneeded = () => { try { rq.result.createObjectStore('media'); } catch (e) {} };
+      rq.onsuccess = () => { this._db = rq.result; done(this._db); };
+      rq.onerror = () => { this._dbFail = true; done(null); };
+    } catch (e) { this._dbFail = true; done(null); }
+  }
+  mediaLoad() {
+    if (this._ml) return; this._ml = true; this._media = this._media || {};
+    this.mediaDB((db) => {
+      if (!db) return;
+      try {
+        const rq = db.transaction('media', 'readonly').objectStore('media').openCursor();
+        rq.onsuccess = () => { const c = rq.result; if (c) { this._media[c.key] = c.value; c.continue(); } else this.forceUpdate(); };
+      } catch (e) {}
+    });
+  }
+  mediaPut(id, v) {
+    this._media = this._media || {}; this._media[id] = v;
+    this.mediaDB((db) => { if (!db) return; try { db.transaction('media', 'readwrite').objectStore('media').put(v, id); } catch (e) {} });
+  }
+  mediaDel(id) {
+    if (this._media) delete this._media[id];
+    this.mediaDB((db) => { if (!db) return; try { db.transaction('media', 'readwrite').objectStore('media').delete(id); } catch (e) {} });
+  }
+  srcOf(it) {
+    if (!it) return '';
+    if (it.src) return it.src;
+    this.mediaLoad();
+    const v = (this._media || {})[it.id];
+    if (!v) return '';
+    if (typeof v === 'string') return v;
+    this._urls = this._urls || {};
+    if (!this._urls[it.id]) { try { this._urls[it.id] = URL.createObjectURL(v); } catch (e) { return ''; } }
+    return this._urls[it.id];
+  }
+  vref() { return (el) => {
+    if (!el || el._ap) return; el._ap = true;
+    try { el.muted = true; el.loop = true; el.playsInline = true; el.setAttribute('muted', ''); } catch (e) {}
+    const play = () => { try { const p = el.play(); if (p && p.catch) p.catch(() => {}); } catch (e) {} };
+    try { const io = new IntersectionObserver((es) => { es.forEach((x) => { if (x.isIntersecting) play(); else { try { el.pause(); } catch (e) {} } }); }, { threshold: 0.05 }); io.observe(el); } catch (e) { play(); }
+  }; }
+  thumbOf(it) { if (!it) return ''; if (it.th) { const t = this.srcOf({ id: 'thumb:' + it.id }); if (t) return t; } return this.srcOf(it); }
+  isVis(it) { return it && (it.kind === 'img' || it.kind === 'video'); }
+  siteTags(u) {
+    const d = this.dom(u); if (!d) return [];
+    const M = [['pinterest', ['pinterest', 'referencia']], ['behance', ['behance', 'portfolio']], ['artstation', ['artstation', 'arte']], ['dribbble', ['dribbble', 'ui']], ['youtube', ['youtube', 'video']], ['youtu.be', ['youtube', 'video']], ['vimeo', ['vimeo', 'video']], ['instagram', ['instagram', 'foto']], ['tiktok', ['tiktok', 'video']], ['twitter', ['twitter']], ['x.com', ['x']], ['reddit', ['reddit']], ['deviantart', ['deviantart', 'arte']], ['unsplash', ['unsplash', 'foto']], ['pexels', ['pexels', 'foto']], ['figma', ['figma', 'ui']], ['github', ['github', 'código']], ['cosmos.so', ['cosmos', 'referencia']], ['are.na', ['arena', 'referencia']], ['fonts.google', ['tipografía']], ['sketchfab', ['sketchfab', '3d']], ['itch.io', ['itchio', 'juegos']], ['steam', ['steam', 'juegos']], ['tumblr', ['tumblr']], ['spotify', ['spotify', 'música']], ['soundcloud', ['soundcloud', 'música']], ['flickr', ['flickr', 'foto']], ['giphy', ['giphy', 'gif']]];
+    for (let i = 0; i < M.length; i++) if (d.indexOf(M[i][0]) >= 0) return M[i][1].slice();
+    const parts = d.split('.'); return [parts.length > 1 ? parts[parts.length - 2] : d];
+  }
+  ui() {
+    if (!this._ui) {
+      let d = null; try { d = JSON.parse(window.localStorage.getItem('archivero.ui.v1') || 'null'); } catch (e) { d = null; }
+      this._ui = Object.assign({ pal: 'grafito', mode: 'light', f1: 'Inter', f2: 'Inter', fit: 'blur' }, d || {});
+    }
+    return this._ui;
+  }
+  uiSet(p) { Object.assign(this.ui(), p); try { window.localStorage.setItem('archivero.ui.v1', JSON.stringify(this._ui)); } catch (e) {} this.forceUpdate(); }
+  pals() { return [['grafito', 'Grafito', 0, 0], ['pizarra', 'Pizarra', 215, 14], ['oceano', 'Océano', 205, 38], ['turquesa', 'Turquesa', 178, 30], ['bosque', 'Bosque', 145, 22], ['musgo', 'Musgo', 80, 20], ['arena', 'Arena', 38, 24], ['ambar', 'Ámbar', 30, 46], ['terracota', 'Terracota', 14, 40], ['vino', 'Vino', 345, 32], ['rosa', 'Rosa', 325, 30], ['lavanda', 'Lavanda', 262, 24]]; }
+  palTones(H, S, dark) {
+    const c = (l, s) => 'hsl(' + H + ' ' + (s == null ? S : s) + '% ' + l + '%)';
+    return dark
+      ? { ink: c(92, Math.min(S, 12)), bg: c(9), t1: c(24), t2: c(21), t3: c(27), t4: c(19), pill: c(30), pillh: c(36), chip: c(84), muted: c(78), field: c(19), sw: c(46), velo: 'hsl(' + H + ' ' + S + '% 9% / .6)' }
+      : { ink: c(10, Math.min(S, 20)), bg: c(85), t1: c(69), t2: c(66), t3: c(72), t4: c(64), pill: c(34), pillh: c(41), chip: c(85), muted: c(32), field: c(27), sw: c(51), velo: 'hsl(' + H + ' ' + S + '% 85% / .55)' };
+  }
+  fonts() { return [['Inter', "'Inter',system-ui,sans-serif"], ['Manrope', "'Manrope',system-ui,sans-serif"], ['Space Grotesk', "'Space Grotesk',system-ui,sans-serif"], ['Fraunces', "'Fraunces',Georgia,serif"], ['JetBrains Mono', "'JetBrains Mono',ui-monospace,monospace"]]; }
+  uiVars() {
+    const u = this.ui();
+    const p = this.pals().find((x) => x[0] === u.pal) || this.pals()[0];
+    const T = this.palTones(p[2], p[3], u.mode === 'dark');
+    const F = this.fonts(); const f1 = (F.find((x) => x[0] === u.f1) || F[0])[1], f2 = (F.find((x) => x[0] === u.f2) || F[0])[1];
+    return Object.keys(T).map((k) => '--' + k + ':' + T[k]).join(';') + ';--f1:' + f1 + ';--f2:' + f2;
+  }
+  stageFit() { return (el) => { if (!el || el._sf) return; el._sf = true; const f = () => { const s = Math.min(el.clientWidth / 1440, el.clientHeight / 900) || 1; if (Math.abs(s - (this.state.fs || 1)) > 0.002) this.setState({ fs: s }); }; f(); try { new ResizeObserver(f).observe(el); } catch (e) { try { window.addEventListener('resize', f); } catch (er) {} } }; }
+  commitNow() { clearTimeout(this.wt); try { window.localStorage.setItem('archivero.lib.v1', JSON.stringify(this.lib())); } catch (e) {} this.setState({ lrev: (this.state.lrev || 0) + 1 }); }
+  embKind(u) { const d = this.dom(u); if (/spotify|soundcloud/.test(d)) return 'audio'; if (/(^|\.)x\.com$|twitter/.test(d)) return 'post'; if (/youtube|youtu\.be|vimeo/.test(d)) return 'video'; if (/tiktok/.test(d)) return 'vertical'; return 'web'; }
+  shapeOf(it) {
+    if (it.kind === 'text') {
+      const L = (it.text || '').length;
+      const a = L < 140 ? 1.8 : L < 420 ? 2.4 : L < 900 ? 3.2 : 4.4;
+      return { a, c: 2, lab: 'texto ' + (L < 140 ? 'corto' : L < 420 ? 'medio' : 'largo') };
+    }
+    if (it.kind === 'link') {
+      const k = this.embKind(it.url);
+      if (k === 'audio') return { a: 0.82, c: 2, lab: 'música embebida · cuadrada' };
+      if (k === 'post') return { a: 1.6, c: 2, lab: 'publicación embebida · horizontal' };
+      if (k === 'video') return { a: 1.45, c: 1, lab: 'video embebido' };
+      if (k === 'vertical') return { a: 0.62, c: 2, lab: 'video vertical embebido' };
+      return { a: 1.5, c: 1, lab: 'enlace embebido' };
+    }
+    const ow = it.ow || it.w || 800, oh = it.oh || it.h || 800, r = ow / oh, px = Math.max(ow, oh);
+    const c = px < 720 ? 1 : px < 1600 ? 2 : 3;
+    const fmt = r >= 1.6 ? 'panorámica' : r <= 0.8 ? 'vertical' : r >= 1.15 ? 'horizontal' : 'cuadrada';
+    return { a: Math.max(0.4, Math.min(3.4, r)), c, lab: ['', 'chica', 'mediana', 'grande'][c] + ' · ' + fmt + ' · ' + ow + '×' + oh + (it.kind === 'video' ? ' · video' : it.gif ? ' · gif' : '') };
+  }
+  sizeOf(it) { return this.shapeOf(it); }
+  pack(its, W, G0) {
+    const G = G0 == null ? 16 : G0;
+    const HC = { 1: 220, 2: 310, 3: 430 };
+    const meta = its.map((it) => { const z = this.shapeOf(it); return { it, a: z.a, hc: HC[z.c], lab: z.lab }; });
+    const sumA = (r) => r.reduce((t, m) => t + m.a, 0);
+    const tgt = (r) => r.reduce((t, m) => t + m.hc, 0) / r.length;
+    const hOf = (r) => (W - G * (r.length - 1)) / sumA(r);
+    const rows = []; let cur = [];
+    meta.forEach((m) => {
+      cur.push(m);
+      if (hOf(cur) <= tgt(cur)) {
+        if (cur.length > 1) { const prev = cur.slice(0, -1); if (Math.abs(hOf(prev) - tgt(prev)) < Math.abs(hOf(cur) - tgt(cur)) && hOf(prev) < tgt(prev) * 1.35) { rows.push(prev); cur = [m]; return; } }
+        rows.push(cur); cur = [];
+      }
+    });
+    if (cur.length) { if (rows.length && hOf(cur) > tgt(cur) * 1.4) rows[rows.length - 1] = rows[rows.length - 1].concat(cur); else rows.push(cur); }
+    const out = []; let y = 0;
+    rows.forEach((r) => {
+      let h = hOf(r); const capped = h > 620; if (capped) h = 620;
+      let x = 0;
+      r.forEach((m, k) => {
+        let w = m.a * h; if (!capped && k === r.length - 1) w = W - x;
+        let clip = false;
+        if (m.it.kind === 'text') { const cpl = Math.max(10, (w - 44) / 8.6); const lines = (m.it.text || '').split('\n').reduce((t, ln) => t + Math.max(1, Math.ceil(ln.length / cpl)), 0); clip = 42 + (m.it.title ? 30 : 0) + lines * 23 > h; }
+        out.push({ it: m.it, z: { lab: m.lab, clip }, x: Math.round(x), y: Math.round(y), w: Math.round(w), h: Math.round(h) });
+        x += w + G;
+      });
+      y += h + G;
+    });
+    return { cards: out, H: Math.max(0, Math.round(y - G)) };
+  }
+  mbox(it) {
+    if (it.kind === 'text') { const L = (it.text || '').length; return L < 140 ? [250, 140] : L < 420 ? [320, 190] : [400, 240]; }
+    if (it.kind === 'link') { const k = this.embKind(it.url); return k === 'audio' ? [320, 320] : k === 'post' ? [330, 200] : k === 'video' ? [400, 290] : k === 'vertical' ? [240, 400] : [300, 210]; }
+    const ow = it.ow || it.w || 800, oh = it.oh || it.h || 800, r = ow / oh, px = Math.max(ow, oh);
+    const Lg = px < 720 ? 270 : px < 1600 ? 420 : 580;
+    let w = r >= 1 ? Lg : Lg * r, h = r >= 1 ? Lg / r : Lg;
+    const q = Math.min(1, ow / w, oh / h); w *= q; h *= q;
+    return [Math.max(120, w), Math.max(90, h)];
+  }
+  tmap(list, x, y, w, h, G, out) {
+    if (!list.length) return;
+    if (list.length === 1) { out.push({ m: list[0], x, y, w, h }); return; }
+    const tot = list.reduce((t, m) => t + m.A, 0);
+    let acc = 0, k = 0;
+    while (k < list.length - 1 && acc + list[k].A / 2 < tot / 2) { acc += list[k].A; k++; }
+    if (k === 0) { acc = list[0].A; k = 1; }
+    const fa = acc / tot, a = list.slice(0, k), b = list.slice(k);
+    if (w >= h) { const wa = Math.round((w - G) * fa); this.tmap(a, x, y, wa, h, G, out); this.tmap(b, x + wa + G, y, w - wa - G, h, G, out); }
+    else { const ha = Math.round((h - G) * fa); this.tmap(a, x, y, w, ha, G, out); this.tmap(b, x, y + ha + G, w, h - ha - G, G, out); }
+  }
+  mchunk(its, VW, VH, G) {
+    const key = its.map((i) => i.id).join(',') + '|' + VW + 'x' + VH;
+    if (this._mc && this._mc.key === key) return this._mc;
+    const boxes = its.map((it) => { const b = this.mbox(it); return { it, A: b[0] * b[1] }; });
+    const S = boxes.reduce((t, b) => t + b.A, 0) * 1.1;
+    const W = Math.round(Math.max(VW, Math.sqrt(S * 1.7))), H = Math.round(Math.max(VH, S / Math.max(VW, Math.sqrt(S * 1.7))));
+    const cache = {}; const self = this;
+    const mc = { key, W, H, cells(ci, cj) {
+      const k = ci + ',' + cj; if (cache[k]) return cache[k];
+      let seed = (Math.abs(ci * 7919 + cj * 104729) % 233279) + 1;
+      const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+      const list = boxes.slice();
+      if (ci !== 0 || cj !== 0) for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = list[i]; list[i] = list[j]; list[j] = t; }
+      const out = []; self.tmap(list, 0, 0, W, H, G, out);
+      cache[k] = out.map((c) => ({ it: c.m.it, x: c.x, y: c.y, w: c.w, h: c.h }));
+      return cache[k];
+    } };
+    this._mc = mc; return mc;
+  }
+  fichaVals(forceId, onClose) {
+    const st = this.state, L = this.lib();
+    const id = forceId || st.edId;
+    const E = id ? L.items.find((x) => x.id === id) : null;
+    const close = () => { if (this.state.closing) return; this.setState({ closing: 'ed' }); clearTimeout(this.ct); this.ct = setTimeout(() => { this.setState({ closing: null, edId: null, fdel: false }); if (onClose) onClose(); }, 320); };
+    let pe = {};
+    if (E) {
+      const up = (k) => (e) => { E[k] = e.target.value; this.commit(); };
+      pe = {
+        isImg: E.kind === 'img', isVid: E.kind === 'video', isLink: E.kind === 'link', isText: E.kind === 'text',
+        kind: E.kind === 'img' ? (E.gif ? 'GIF' : 'Imagen') : E.kind === 'video' ? 'Video' : E.kind === 'link' ? 'Enlace' : 'Texto', date: this.fdate(E.t),
+        size: 'Tamaño en el tablero: ' + this.shapeOf(E).lab,
+        auto: (E.atags || []).map((t) => ({ t })), hasAuto: (E.atags || []).length > 0,
+        src: this.srcOf(E), text: E.text || '', dom: this.dom(E.url), href: E.url || '#',
+        title: E.title || '', note: E.note || '', url: E.url || '', tags: E.tags || '',
+        onTitle: up('title'), onNote: up('note'), onText: up('text'), onTags: up('tags'),
+        onUrl: (e) => { E.url = e.target.value; E.atags = E.url.trim() ? this.siteTags(E.url.trim()) : []; this.commit(); },
+        onBoard: (e) => { E.bid = e.target.value; this.commit(); },
+        bopts: L.boards.map((b) => ({ v: b.id, l: b.name, sel: b.id === E.bid })),
+        delLbl: st.fdel ? 'Tocá de nuevo para eliminar' : 'Eliminar pieza',
+        del: () => { if (!this.state.fdel) { this.setState({ fdel: true }); return; } this.mediaDel(E.id); L.items = L.items.filter((x) => x.id !== E.id); this.commitNow(); this.setState({ edId: null, fdel: false }); if (onClose) onClose(); }
+      };
+    }
+    return { edOn: !!E, pe, edClose: close, xEd: st.closing === 'ed' ? 'out' : '' };
+  }
+  bname(id) { const b = this.lib().boards.find((x) => x.id === id); return b ? b.name : 'Sin tablero'; }
+  fdate(t) { const d = new Date(t); const p = (n) => String(n).padStart(2, '0'); return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + String(d.getFullYear()).slice(2) + ', ' + p(d.getHours()) + ':' + p(d.getMinutes()) + 'hs'; }
+  dom(u) { if (!u) return ''; try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return String(u).replace(/^https?:\/\//, '').split('/')[0]; } }
+  tagsOf(it) { if (!it) return ''; const a = (it.atags || []).concat(String(it.tags || '').split(',')).map((t) => String(t).trim().replace(/^#/, '')).filter(Boolean); return a.filter((t, i) => a.indexOf(t) === i).map((t) => '#' + t).join(' '); }
+  allItems() { return this.lib().items.slice().sort((a, b) => b.t - a.t); }
+  itemInfo(it) {
+    if (!it) return [];
+    const out = [];
+    if (it.kind === 'text' && it.text) out.push('Texto: ' + it.text.slice(0, 160) + (it.text.length > 160 ? '…' : ''));
+    if (it.note) out.push('Nota: ' + it.note);
+    if (it.url) out.push('Sitio web: ' + this.dom(it.url));
+    out.push('Fecha: ' + this.fdate(it.t));
+    out.push('Tablero: ' + this.bname(it.bid));
+    const tg = this.tagsOf(it); if (tg) out.push('Etiquetas: ' + tg);
+    return out;
+  }
+  libVals() {
+    const its = this.allItems().slice(0, 8);
+    return {
+      srec: its.map((it, i) => ({ src: this.srcOf(it), title: it.title || 'Sin título', isImg: it.kind === 'img', isVid: it.kind === 'video', noImg: !this.isVis(it), d: (0.3 + i * 0.05).toFixed(2) + 's' })), vref: this.vref(), uiVars: this.uiVars(),
+      scrIn: (() => { if (!this._si) { this._si = true; setTimeout(() => { this._siDone = true; this.forceUpdate(); }, 950); } return this._siDone ? '0' : '1'; })(),
+      leaving: this.state.leaving ? '1' : '0',
+      navOut: () => {}, stageFit: this.stageFit(), fs: this.state.fs || 1,
+      srecNone: its.length === 0, libEmpty: this.lib().items.length === 0, libAny: this.lib().items.length > 0
+    };
+  }
+  selVals() {
+    const L = this.lib();
+    const it = L.items.find((x) => x.id === L.selId) || this.allItems()[0];
+    if (!it) return { hasSel: false, noSel: true, sel: {} };
+    return { hasSel: true, noSel: false, sel: { id: it.id, title: it.title || 'Sin título', isImg: it.kind === 'img', isVid: it.kind === 'video', noImg: !this.isVis(it), src: this.srcOf(it), body: it.kind === 'text' ? (it.text || '') : (it.url || ''), lines: this.itemInfo(it).map((t) => ({ t })) } };
+  }
+  renderVals() {
+    const tn = this.state.tn;
+    const ty = (full, off, k) => { const c = Math.max(0, Math.floor((tn - off) * (k || 1))); return { t: full.slice(0, c), c: tn >= off && c < full.length }; };
+    const s = ty('Buscar…', 2);
+    return {
+      ...this.libVals(), ...this.selVals(), ...this.fichaVals(this.selVals().sel.id, () => { if (this.backEl) this.backEl.click(); }), backRef: (el) => { this.backEl = el; },
+      s, sOn: this.state.sq !== 'off', sCls: this.state.sq === 'out' ? 'bz out' : 'bz',
+      openS: () => { clearTimeout(this.t3); this.setState({ sq: 'in' }); },
+      closeS: () => { if (this.state.sq !== 'in') return; this.setState({ sq: 'out' }); this.t3 = setTimeout(() => this.setState({ sq: 'off' }), 640); }
+    };
+  }
+}
+
+export { Component };

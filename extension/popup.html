@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Archivero</title>
+    <link rel="stylesheet" href="/src/popup.css" />
+  </head>
+  <body>
+    <h1>Archivero</h1>
+    <p class="sub">Guardá lo que veas, se ordena solo.</p>
+
+    <label for="project">Proyecto activo</label>
+    <div class="row">
+      <select id="project"></select>
+      <button id="new-project" class="sq" aria-label="Crear proyecto">+</button>
+    </div>
+    <div class="row" id="new-row" hidden>
+      <input id="new-name" type="text" placeholder="Nombre del proyecto" maxlength="40" />
+      <button id="new-ok" class="sq ok" aria-label="Crear">✓</button>
+    </div>
+
+    <button id="save-page" class="pill">Guardar esta página</button>
+    <button id="open-library" class="pill o">Abrir mi librería</button>
+    <p id="status" role="status"></p>
+    <p class="foot">Atajo: Alt+Shift+S · clic derecho sobre imágenes y texto</p>
+    <script type="module" src="/src/popup.js"></script>
+  </body>
+</html>

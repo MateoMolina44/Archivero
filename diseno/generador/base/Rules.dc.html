@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Archivero - Reglas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111113}
+</style>
+</helmet>
+<div style="display:flex;flex-wrap:wrap;min-height:820px;background:#111113;color:#fafafa;font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.45">
+
+  <aside style="flex:0 0 240px;box-sizing:border-box;background:#18181b;border-right:1px solid #2e2e33;padding:20px 12px;display:flex;flex-direction:column;gap:4px">
+    <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:20px;padding:0 8px 16px;display:flex;align-items:center;gap:8px">
+      <span style="width:14px;height:14px;border-radius:4px;background:#facc15;display:inline-block"></span>Archivero
+    </div>
+    <div style="padding:7px 8px;border-radius:8px;color:#a1a1aa">Todo</div>
+    <div style="padding:7px 8px;border-radius:8px;color:#a1a1aa">Colecciones</div>
+    <div style="padding:7px 8px;border-radius:8px;color:#a1a1aa">Proyectos</div>
+    <div style="flex:1;min-height:20px"></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 8px;border-radius:8px;background:#242428;color:#fafafa"><span>Reglas</span><span style="color:#8b8b95">6</span></div>
+  </aside>
+
+  <main style="flex:999 1 520px;min-width:0;box-sizing:border-box;padding:0 28px 40px">
+    <header style="display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:24px 0 12px">
+      <h1 style="margin:0 auto 0 0;font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700">Reglas de organización</h1>
+      <span style="border:1px solid #2e2e33;background:#1f1f23;border-radius:8px;padding:7px 12px">Reaplicar a “Sin clasificar”</span>
+      <span style="background:#facc15;color:#18181b;border-radius:8px;padding:7px 14px;font-weight:600">+ Nueva regla</span>
+    </header>
+
+    <p style="margin:0 0 20px;max-width:680px;color:#a1a1aa">Al guardar algo se evalúan las reglas en orden. <strong style="color:#fafafa">La primera que coincida y tenga colección decide dónde cae</strong>; las etiquetas de todas las que coincidan se suman.</p>
+
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:920px">
+      <sc-for list="{{rules}}" as="r" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:14px;background:#18181b;border:1px solid #2e2e33;border-radius:10px;padding:12px 14px;opacity:{{r.opacity}}">
+          <span style="width:26px;height:26px;border-radius:50%;background:#242428;display:flex;align-items:center;justify-content:center;font-size:12px;color:#a1a1aa;flex:none">{{r.n}}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:500">{{r.name}}</div>
+            <div style="color:#8b8b95;font-size:13px;margin-top:2px">{{r.summary}}</div>
+          </div>
+          <span style="width:36px;height:20px;border-radius:20px;background:{{r.sw}};position:relative;flex:none"><span style="position:absolute;top:3px;left:{{r.knob}}px;width:14px;height:14px;border-radius:50%;background:#fff"></span></span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- Editor abierto -->
+    <div style="margin-top:28px;max-width:560px;background:#18181b;border:1px solid #facc15;border-radius:14px;padding:20px">
+      <h2 style="margin:0 0 4px;font-family:'Space Grotesk',sans-serif;font-size:18px">Editar regla</h2>
+      <div style="color:#a1a1aa;font-size:12px;margin:12px 0 4px">Nombre</div>
+      <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Referencias de UI → UI y HUD</div>
+      <div style="color:#a1a1aa;font-size:12px;margin:14px 0 4px">Cuando se cumpla ALGUNA de estas condiciones…</div>
+      <div style="display:grid;grid-template-columns:160px minmax(0,1fr);gap:8px;margin-bottom:8px">
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Dominio</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">behance.net</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Palabras clave</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">hud, interfaz, menú</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Proyecto activo</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Bloodsport</div>
+      </div>
+      <div style="color:#a1a1aa;font-size:12px;margin:14px 0 4px">Entonces…</div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px">
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Mover a: UI y HUD</div>
+        <div style="background:#1f1f23;border:1px solid #2e2e33;border-radius:8px;padding:8px 10px">Agregar: ui, referencia</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:18px">
+        <span style="border:1px solid #2e2e33;border-radius:8px;padding:7px 14px">Cancelar</span>
+        <span style="background:#facc15;color:#18181b;border-radius:8px;padding:7px 14px;font-weight:600">Guardar</span>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const on = { opacity: '1', sw: '#facc15', knob: 19 };
+    return {
+      rules: [
+        { n: 1, name: 'Videos → Videos', summary: 'Tipo: Video   →   Videos', ...on },
+        { n: 2, name: 'Referencias de UI → UI y HUD', summary: 'Dominio: behance.net  O  Palabras clave: hud, interfaz, menú   →   UI y HUD  ·  #ui', ...on },
+        { n: 3, name: 'Arte de personajes', summary: 'Dominio: artstation.com  O  Dominio: pinterest.com   →   Arte y personajes  ·  #arte', ...on },
+        { n: 4, name: 'Herramientas de código y diseño', summary: 'Dominio: github.com  O  Dominio: figma.com   →   Herramientas  ·  #herramienta  ·  tipo: Herramienta', ...on },
+        { n: 5, name: 'Texto seleccionado → Textos y citas', summary: 'Tipo: Texto   →   Textos y citas', ...on },
+        { n: 6, name: 'Todo lo del proyecto Tren de la Morgue (pausada)', summary: 'Proyecto activo: Tren de la Morgue   →   etiqueta #morgue', opacity: '.5', sw: '#2e2e33', knob: 3 }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

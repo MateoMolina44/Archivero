@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-web/
+.vercel/
+*.zip
+*.log
+.DS_Store

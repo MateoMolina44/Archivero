@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Archivero - Archivo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+
+
+
+
+body{margin:0}
+a{text-decoration:none;color:inherit}
+.sec{position:absolute;left:50%;bottom:20px;transform:translateX(-50%);z-index:9;height:44px}
+.sec-c,.sec-x{background:#575757;border-radius:30px;height:44px;display:flex;align-items:center;gap:10px;padding:0 7px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)}
+.sec-c{transition:opacity .2s cubic-bezier(.4,0,.2,1),transform .3s cubic-bezier(.4,0,.2,1)}
+.sec-x{position:absolute;left:50%;bottom:0;gap:8px;white-space:nowrap;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(-50%) translateY(10px) scale(.85);filter:blur(4px);transition:opacity .25s cubic-bezier(.4,0,.2,1),transform .45s cubic-bezier(.4,0,.2,1),filter .35s cubic-bezier(.4,0,.2,1),visibility 0s .45s}
+.sec:hover .sec-x,.sec:focus-within .sec-x{opacity:1;visibility:visible;pointer-events:auto;transform:translateX(-50%) translateY(0) scale(1);filter:none;transition-delay:0s}
+.sec:hover .sec-c,.sec:focus-within .sec-c{opacity:0;transform:scale(.9)}
+.sec-x a>span,.sec-x>span>span,.sec-c a>span,.sec-c>span>span{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}
+.sec-x a:hover>span,.sec-x>span:hover>span{background:#fff!important;transform:scale(1.08)}
+.sec-x a:active>span,.sec-x>span:active>span{transform:scale(.95)}
+.sec-x a:focus-visible{outline:2px solid #fff;outline-offset:2px;border-radius:50%}
+.sb{position:absolute;left:50%;top:20px;width:320px;transform:translateX(-50%);transition:width .5s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1),transform .15s cubic-bezier(.4,0,.2,1),box-shadow .15s cubic-bezier(.4,0,.2,1);border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)}
+.sb:hover,.sb:focus-visible{width:380px;background:#626262!important}
+.sb:active{transform:translateX(-50%) scale(.98)}
+.sb:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.sb svg{transition:transform .5s cubic-bezier(.4,0,.2,1)}.sb:hover svg{transform:scale(1.12)}
+.shm{white-space:nowrap;color:transparent;-webkit-text-fill-color:transparent;background-image:linear-gradient(100deg,transparent 35%,rgba(255,255,255,.95) 50%,transparent 65%),linear-gradient(#c9c9c9,#c9c9c9);background-size:250% 100%,auto;background-clip:text;-webkit-background-clip:text;animation:shm 2.2s linear infinite}
+@keyframes shm{0%{background-position:100% center,0 0}100%{background-position:0% center,0 0}}
+@keyframes enter{0%{opacity:0;filter:blur(2px)}100%{opacity:1;filter:blur(0)}}
+@keyframes scale-in{0%{opacity:0;transform:scale(.95)}100%{opacity:1;transform:scale(1)}}
+@keyframes slide-in{0%{opacity:0;transform:translateY(24px)}100%{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce){.sec-c,.sec-x,.sb,.shm,.sec-x a>span{transition-duration:.01ms!important;animation:none!important}}
+.ti{transition:transform .7s cubic-bezier(.4,0,.2,1),filter .7s cubic-bezier(.4,0,.2,1)}
+.tile:hover .ti,.tile:focus-visible .ti{transform:scale(1.06)}
+.ov{opacity:0;transition:opacity .4s cubic-bezier(.4,0,.2,1)}
+.tile:hover .ov,.tile:focus-visible .ov{opacity:1}
+.tile:focus-visible{outline:2px solid #575757;outline-offset:2px}
+.mos:hover .tile:not(:hover) .ti{filter:brightness(.92)}
+@keyframes tile-in{0%{opacity:0;filter:blur(2px);transform:scale(.95)}100%{opacity:1;filter:blur(0);transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){.tile{animation:none!important}.ti,.ov{transition-duration:.01ms!important}}
+
+.cur{display:inline-block;width:.5em;height:.85em;background:currentColor;vertical-align:-.08em;margin-left:2px}
+.cur{display:inline-block;width:.5em;height:.85em;background:currentColor;vertical-align:-.08em;margin-left:2px}
+@keyframes bar-in{0%{left:560px;width:320px}100%{left:490px;width:460px}}
+@keyframes bar-out{0%{left:490px;width:460px}100%{left:560px;width:320px}}
+@keyframes drop-in{0%{opacity:0;clip-path:inset(0 0 100% 0)}100%{opacity:1;clip-path:inset(0 0 0 0)}}
+@keyframes drop-out{0%{opacity:1;clip-path:inset(0 0 0 0)}100%{opacity:0;clip-path:inset(0 0 100% 0)}}
+@keyframes slide-out{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(24px)}}
+@keyframes fade-out{0%{opacity:1}100%{opacity:0}}
+.bz .velo{animation:enter .35s cubic-bezier(.4,0,.2,1) both}
+.bz .panel{animation:bar-in .5s cubic-bezier(.4,0,.2,1) both}
+.bz .pin{animation:drop-in .5s cubic-bezier(.4,0,.2,1) .12s both}
+.bz .chip,.bz .vt{animation:slide-in .5s cubic-bezier(.4,0,.2,1) both;animation-delay:var(--d)}
+.bz.out .panel{animation:bar-out .45s cubic-bezier(.4,0,.2,1) .15s both!important}.bz.out .pin{animation:drop-out .3s cubic-bezier(.4,0,.2,1) both!important}.bz.out .chip,.bz.out .vt{animation:slide-out .3s cubic-bezier(.4,0,.2,1) both!important}.bz.out .velo{animation:fade-out .45s cubic-bezier(.4,0,.2,1) .1s both!important}
+.chip{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}.chip:hover{background:#fff!important;transform:scale(1.04)}.chip:active{transform:scale(.95)}
+.vt{transition:transform .7s cubic-bezier(.4,0,.2,1)}.vt:hover{transform:scale(1.04)}
+.x{transition:transform .15s cubic-bezier(.4,0,.2,1),background-color .15s cubic-bezier(.4,0,.2,1)}.x:hover{background:#fff!important;transform:scale(1.08)}.x:active{transform:scale(.95)}
+.x:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.fv{font-size:14px;position:relative;display:inline-block;color:#fff;text-decoration:none}
+.fv::after{content:"";position:absolute;left:0;bottom:-2px;width:100%;height:1px;background:currentColor;transform:scaleX(0);transform-origin:right center;transition:transform .7s cubic-bezier(.19,1,.22,1)}
+.fv:hover::after{transform:scaleX(1);transform-origin:left center}
+@media (prefers-reduced-motion:reduce){.bz .velo,.bz .panel,.bz .pin,.bz .chip,.bz .vt,.bz.out .panel,.bz.out .pin,.bz.out .chip,.bz.out .vt,.bz.out .velo{animation-duration:.01ms!important;animation-delay:0s!important}}
+button.tile{border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:inherit}
+</style>
+</helmet>
+<div class="mos" onMouseDown="{{down}}" onMouseMove="{{move}}" onMouseUp="{{up}}" onMouseLeave="{{up}}" onAuxClick="{{aux}}" style="position:relative;width:1440px;height:900px;background:#d9d9d9;overflow:hidden;font-family:'Inter',system-ui,sans-serif;color:#fff;cursor:{{cur}}">
+  <div style="{{world}}">
+  <sc-for list="{{tiles}}" as="b" hint-placeholder-count="4">
+    <a class="tile" href="Tablero.dc.html" aria-label="Abrir {{b.name}}" tabindex="{{b.tab}}" onMouseEnter="{{b.enter}}" onMouseLeave="{{b.leave}}" onFocus="{{b.enter}}" onBlur="{{b.leave}}" style="position:absolute;left:{{b.l}}px;top:{{b.t}}px;width:659px;height:368px;border-radius:10px;overflow:hidden;display:block;animation:tile-in .8s cubic-bezier(.4,0,.2,1) both;animation-delay:{{b.delay}}">
+      <div class="ti" style="position:absolute;inset:0;background:{{b.bg}}"></div>
+      <div class="ov" style="position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;text-align:center">
+        <div class="hv" style="font-size:56px;font-weight:700;line-height:1.1;position:relative;display:inline-block"><span aria-hidden="true" style="visibility:hidden">{{b.name}}</span><span style="position:absolute;left:0;top:0;white-space:nowrap">{{b.l1}}<sc-if value="{{b.c1}}" hint-placeholder-val="{{false}}"><span class="cur"></span></sc-if></span></div>
+      </div>
+    </a>
+  </sc-for>
+  </div>
+  <button class="sb" onClick="{{openS}}" aria-label="Abrir buscador" style="position:absolute;top:20px;height:40px;background:#575757;border-radius:30px;display:flex;align-items:center;gap:10px;padding:0 16px;box-sizing:border-box;font-size:14px;font-family:inherit;color:#fff;z-index:9;cursor:pointer">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+    <span class="shm">{{s.t}}</span><sc-if value="{{s.c}}" hint-placeholder-val="{{false}}"><span class="cur"></span></sc-if>
+  </button>
+
+  <!-- Botón de sección: colapsado, se extiende al hover -->
+  <div class="sec"><div class="sec-c"><span aria-label="Sección actual" style="display:flex"><span title="Sección actual" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2.5" width="12" height="4.5" rx="1.2"/><rect x="2" y="9" width="12" height="4.5" rx="1.2"/></svg></span></span><span style="width:5px;height:24px;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;box-sizing:border-box;flex:none;opacity:.8"></span><span aria-label="Herramienta actual" style="display:flex"><span title="Herramienta actual" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></span></span></div><div class="sec-x"><span aria-label="Nuevo tablero" style="display:flex"><span title="Nuevo tablero" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v10M3 8h10"/></svg></span></span><span aria-label="Ordenar" style="display:flex"><span title="Ordenar" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 4h12M4 8h8M6 12h4"/></svg></span></span><span style="width:5px;height:24px;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;box-sizing:border-box;flex:none;opacity:.8"></span><a href="Main.dc.html" aria-label="Principal" style="display:flex"><span title="Principal" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="12" height="5" rx="1"/></svg></span></a><a href="Anotador.dc.html" aria-label="Anotador" style="display:flex"><span title="Anotador" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 13l1-3.5L11 2.5l2.5 2.5L6.5 12z"/></svg></span></a><span style="width:5px;height:24px;border-left:1px solid #d9d9d9;border-right:1px solid #d9d9d9;box-sizing:border-box;flex:none;opacity:.8"></span><span aria-label="Reglas y ajustes" style="display:flex"><span title="Reglas y ajustes" style="width:30px;height:30px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;flex:none"><svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#111" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M12.6 3.4l-1.4 1.4M4.8 11.2l-1.4 1.4"/></svg></span></span></div></div>
+
+  <sc-if value="{{sOn}}" hint-placeholder-val="{{false}}">
+  <div class="{{sCls}}" style="position:absolute;inset:0;z-index:40">
+    <button class="velo" onClick="{{closeS}}" aria-label="Cerrar buscador" style="position:absolute;inset:0;width:100%;height:100%;background:rgba(217,217,217,.55);border:0;padding:0;cursor:default"></button>
+    <div class="panel" style="position:absolute;left:490px;top:20px;width:460px;transform-origin:top center;color:#fff">
+      <div style="height:40px;background:#575757;border-radius:30px;display:flex;align-items:center;gap:10px;padding:0 6px 0 16px;box-sizing:border-box;font-size:14px;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08),inset 0 1px 1.5px rgba(255,255,255,.12)">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>
+        <span style="flex:1;color:#ececec">Buscar en tableros…</span>
+        <button class="x" onClick="{{closeS}}" aria-label="Cerrar buscador" style="width:28px;height:28px;border-radius:50%;background:#d9d9d9;display:flex;align-items:center;justify-content:center;border:0;padding:0;cursor:pointer"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#111" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2 2l8 8M10 2l-8 8"/></svg></button>
+      </div>
+      <div class="pin" style="margin-top:6px;background:#575757;border-radius:14px;padding:14px;box-sizing:border-box;border:1px solid rgba(255,255,255,.12);box-shadow:0 3px 12px rgba(0,0,0,.08);">
+        <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:600;margin-bottom:10px"><span>Recientes</span><span style="text-decoration:underline">Borrar</span></div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px"><span class="chip" style="background:#d9d9d9;color:#111;border-radius:6px;padding:5px 12px;font-size:12px;--d:0.15s">tableros western</span><span class="chip" style="background:#d9d9d9;color:#111;border-radius:6px;padding:5px 12px;font-size:12px;--d:0.19s">referencias ui</span><span class="chip" style="background:#d9d9d9;color:#111;border-radius:6px;padding:5px 12px;font-size:12px;--d:0.23s">personajes</span><span class="chip" style="background:#d9d9d9;color:#111;border-radius:6px;padding:5px 12px;font-size:12px;--d:0.27s">sin clasificar</span></div>
+        <div style="font-size:11px;font-weight:600;margin:16px 0 10px">Tableros recientes</div>
+        <div style="display:flex;gap:8px;overflow:hidden;margin-right:-14px"><div class="vt" style="flex:none;width:160px;height:72px;background:#d9d9d9;border-radius:6px;--d:0.30s"></div><div class="vt" style="flex:none;width:160px;height:72px;background:#d9d9d9;border-radius:6px;--d:0.35s"></div><div class="vt" style="flex:none;width:160px;height:72px;background:#d9d9d9;border-radius:6px;--d:0.40s"></div></div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":806}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { px: 0, py: 0, panning: false, hov: null, n: 0, tn: 0, sq: 'off' };
+    this.drag = null;
+    this.iv = null;
+  }
+  componentDidMount() {
+    this.tiv = setInterval(() => {
+      const tn = this.state.tn + 1;
+      this.setState({ tn });
+      if (tn >= 140) clearInterval(this.tiv);
+    }, 40);
+  }
+  componentWillUnmount() { clearInterval(this.iv); clearInterval(this.tiv); clearTimeout(this.t1); clearTimeout(this.t3); }
+  startType(id, total) {
+    clearInterval(this.iv);
+    this.setState({ hov: id, n: 0 });
+    this.iv = setInterval(() => {
+      const n = this.state.n + 1;
+      this.setState({ n });
+      if (n >= total) clearInterval(this.iv);
+    }, 45);
+  }
+  stopType() { clearInterval(this.iv); this.setState({ hov: null, n: 0 }); }
+
+  renderVals() {
+    const W = 1440, H = 806;
+    const mod = (v, m) => ((v % m) + m) % m;
+    const ox = mod(this.state.px, W), oy = mod(this.state.py, H);
+    const tn = this.state.tn;
+    const ty = (full, off, k) => { const c = Math.max(0, Math.floor((tn - off) * (k || 1))); return { t: full.slice(0, c), c: tn >= off && c < full.length }; };
+    const s = ty('Buscar…', 2);
+    const typed = (id, name, tags) => {
+      const on = this.state.hov === id;
+      const n = on ? this.state.n : 0;
+      const total = name.length + tags.length;
+      return {
+        l1: name.slice(0, n), l2: tags.slice(0, Math.max(0, n - name.length)),
+        c1: on && n < name.length, c2: on && n >= name.length && n < total,
+        enter: () => { if (this.state.hov !== id) this.startType(id, total); }, leave: () => this.stopType()
+      };
+    };
+    const copies = [];
+    for (let cx = -1; cx <= 1; cx++) for (let cy = -1; cy <= 1; cy++) copies.push([cx, cy]);
+    const base = [['Tablero #1', 46, 168], ['Tablero #2', 739, 168], ['Tablero #3', 46, 571], ['Tablero #4', 739, 571]];
+    const tones = ['#afafaf', '#a7a7a7', '#b7b7b7', '#a3a3a3'];
+    const tiles = [];
+    copies.forEach(([cx, cy]) => base.forEach((b, i) => {
+      const main = cx === 0 && cy === 0;
+      tiles.push(Object.assign({ name: b[0], l: b[1] + cx * W, t: b[2] + cy * H, bg: tones[i], tab: main ? '0' : '-1', delay: (main ? 0.05 + i * 0.1 : 0.4).toFixed(2) + 's' },
+        typed(cx + ',' + cy + ',' + i, b[0], '')));
+    }));
+    return {
+      tiles,
+      world: 'position:absolute;left:0;top:0;width:100%;height:100%;will-change:transform;transform:translate3d(' + ox + 'px,' + oy + 'px,0)',
+      cur: this.state.panning ? 'grabbing' : 'default',
+      down: (e) => { if (e.button !== 1) return; e.preventDefault(); this.drag = { x: e.clientX, y: e.clientY, px: this.state.px, py: this.state.py }; this.setState({ panning: true }); },
+      move: (e) => { if (!this.drag) return; this.setState({ px: this.drag.px + e.clientX - this.drag.x, py: this.drag.py + e.clientY - this.drag.y }); },
+      up: () => { if (!this.drag) return; this.drag = null; this.setState({ panning: false }); },
+      aux: (e) => { if (e.button === 1) e.preventDefault(); },
+      s, sOn: this.state.sq !== 'off', sCls: this.state.sq === 'out' ? 'bz out' : 'bz',
+      openS: () => { clearTimeout(this.t3); this.setState({ sq: 'in' }); },
+      closeS: () => { if (this.state.sq !== 'in') return; this.setState({ sq: 'out' }); this.t3 = setTimeout(() => this.setState({ sq: 'off' }), 640); }
+    };
+  }
+}
+</script>
+</body>
+</html>

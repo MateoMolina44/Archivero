@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Archivero - Extensión</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+</style>
+</helmet>
+<div style="position:relative;width:1440px;height:760px;background:#e9e9e9;overflow:hidden;font-family:'Inter',system-ui,sans-serif;color:#111">
+
+  <!-- Página web simulada -->
+  <div style="position:absolute;left:0;top:0;width:1440px;height:44px;background:#cfcfcf"></div>
+  <div style="position:absolute;left:24px;top:12px;width:560px;height:20px;border-radius:20px;background:#e9e9e9"></div>
+  <div style="position:absolute;left:60px;top:90px;width:760px;height:520px;background:#afafaf;border-radius:10px"></div>
+  <div style="position:absolute;left:60px;top:630px;width:500px;height:14px;background:#c4c4c4;border-radius:4px"></div>
+  <div style="position:absolute;left:60px;top:656px;width:380px;height:14px;background:#c4c4c4;border-radius:4px"></div>
+
+  <!-- Popup de la extensión -->
+  <div style="position:absolute;left:1040px;top:54px;width:340px;background:#d9d9d9;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.25);padding:18px;box-sizing:border-box">
+    <div style="font-size:18px;font-weight:700">Archivero</div>
+    <div style="font-size:12px;color:#575757;margin:2px 0 16px">Guardá lo que veas, se ordena solo.</div>
+
+    <div style="font-size:11px;font-weight:600;margin-bottom:6px">Proyecto activo</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="flex:1;height:34px;background:#afafaf;border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:13px">Interfaz western</div>
+      <div style="width:34px;height:34px;background:#afafaf;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px">+</div>
+    </div>
+
+    <div style="height:38px;background:#575757;color:#fff;border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;margin-bottom:8px">Guardar esta página</div>
+    <div style="height:38px;border:1.5px solid #575757;border-radius:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">Abrir mi librería</div>
+
+    <div style="font-size:11px;color:#575757;margin-top:14px;text-align:center">Atajo: Alt+Shift+S · clic derecho sobre imágenes y texto</div>
+  </div>
+
+  <!-- Aviso al guardar (toast) -->
+  <div style="position:absolute;left:500px;bottom:34px;width:440px;background:#575757;color:#fff;border-radius:30px;padding:10px 12px 10px 20px;box-sizing:border-box;display:flex;align-items:center;gap:12px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.3)">
+    <span style="flex:1"><b>Guardado</b> en Tablero #2 · #paleta #hud</span>
+    <span style="background:#d9d9d9;color:#111;border-radius:20px;padding:6px 14px;font-weight:600;font-size:12px">Cambiar</span>
+    <span style="opacity:.7;font-size:16px">×</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

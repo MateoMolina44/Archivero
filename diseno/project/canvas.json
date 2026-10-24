@@ -1,0 +1,154 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Ajustes.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Reglas y ajustes (se abre con el engranaje)",
+      "w": 1440,
+      "x": 1520,
+      "y": 4080,
+      "expand": "fill"
+    },
+    "Anotador.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Anotador (estilo journal: grilla, carrusel y reverso)",
+      "w": 1440,
+      "x": 0,
+      "y": 2040,
+      "expand": "fill"
+    },
+    "Archivo.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Archivo - tableros",
+      "w": 1440,
+      "x": 0,
+      "y": 1020,
+      "expand": "fill"
+    },
+    "Botones.dc.html": {
+      "h": 560,
+      "title": "Botón de sección por pantalla",
+      "w": 1440,
+      "x": 1520,
+      "y": 2040
+    },
+    "Buscador.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Buscador - principal vista 2",
+      "w": 1440,
+      "x": 3040,
+      "y": 0,
+      "expand": "fill"
+    },
+    "BuscadorArchivo.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Buscador - archivo",
+      "w": 1440,
+      "x": 1520,
+      "y": 3060,
+      "expand": "fill"
+    },
+    "BuscadorTablero.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Buscador - vista de tablero",
+      "w": 1440,
+      "x": 3040,
+      "y": 3060,
+      "expand": "fill"
+    },
+    "BuscadorVista1.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Buscador - principal vista 1",
+      "w": 1440,
+      "x": 0,
+      "y": 3060,
+      "expand": "fill"
+    },
+    "Extension.dc.html": {
+      "h": 760,
+      "title": "Extensión: popup y aviso al guardar",
+      "w": 1440,
+      "x": 3040,
+      "y": 2040
+    },
+    "Main.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Principal - vista 2 (mosaico)",
+      "w": 1440,
+      "x": 1520,
+      "y": 0,
+      "expand": "fill"
+    },
+    "Main1.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Principal - vista 1 (pantalla completa)",
+      "w": 1440,
+      "x": 0,
+      "y": 0,
+      "expand": "fill"
+    },
+    "Seleccion.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Vista de tablero - selección (estado fijo)",
+      "w": 1440,
+      "x": 3040,
+      "y": 1020,
+      "expand": "fill"
+    },
+    "Tablero.dc.html": {
+      "h": 900,
+      "is_interactive": true,
+      "title": "Vista de tablero",
+      "w": 1440,
+      "x": 1520,
+      "y": 1020,
+      "expand": "fill"
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-22T21:50:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "t1": {
+      "kind": "title1",
+      "maxW": 4480,
+      "text": "Archivero: prototipo de Figma (Page 2)",
+      "w": 240,
+      "x": 0,
+      "y": -300
+    }
+  },
+  "order": [
+    "Main1.dc.html",
+    "Main.dc.html",
+    "Buscador.dc.html",
+    "Archivo.dc.html",
+    "Tablero.dc.html",
+    "Seleccion.dc.html",
+    "Anotador.dc.html",
+    "Botones.dc.html",
+    "Extension.dc.html",
+    "BuscadorVista1.dc.html",
+    "BuscadorArchivo.dc.html",
+    "BuscadorTablero.dc.html",
+    "Ajustes.dc.html"
+  ],
+  "pages": [],
+  "title": "Archivero - referencia visual"
+}

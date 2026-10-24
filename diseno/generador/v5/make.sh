@@ -1,0 +1,9 @@
+set -e
+cd /tmp/w/v5
+python3 build.py
+python3 note6.py
+python3 rules_patch.py
+python3 archivo30.py
+python3 others30.py
+python3 extras.py
+python3 theme31.py
