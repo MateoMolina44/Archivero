@@ -1,7 +1,7 @@
 # Archivero
 
 Librería personal de inspiraciones + extensión de Chrome que guarda y organiza sola.
-Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con Exportar/Importar en Reglas y ajustes → Copia local.
+Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con Exportar/Importar en Reglas y ajustes → Copia local (incluye las notas del Anotador).
 
 ## Instalar
 1. `npm install` y `npm run build` (genera `dist/`).
@@ -31,6 +31,5 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 `npm run preview` y abrir `http://localhost:5173/library.html`. Fuera de la extensión los ajustes usan localStorage.
 
 ## Pendiente
-- Las notas del Anotador se guardan en IndexedDB (`src/library/notes.js`), pero todavía no entran en Exportar/Importar copia.
 - Nube real (se sacó la maqueta) y decidir si vuelve la intro con el cajón.
 - La librería React anterior quedó en `legacy/library-react/` (no se compila; se puede borrar).

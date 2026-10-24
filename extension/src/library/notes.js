@@ -53,3 +53,19 @@ export function detachNotes() {
 }
 
 window.addEventListener('pagehide', flush);
+
+// Copia local: las notas actuales (las de la pantalla abierta, si el Anotador está a la vista)…
+export function notesBackup() {
+  if (inst) data = { notes: inst.notes, seq: inst.seq, nsort: inst.nsort || 'recent' };
+  return JSON.parse(JSON.stringify(data));
+}
+
+// …y al restaurar una copia, reemplazan a las guardadas.
+export function restoreNotes(d) {
+  data = { notes: d.notes, seq: d.seq || d.notes.length, nsort: d.nsort || 'recent' };
+  saved = JSON.stringify(data);
+  mediaPut(KEY, JSON.parse(saved)).catch((e) => console.warn('[Archivero] No se pudieron guardar las notas', e));
+  if (inst) { inst.notes = data.notes; inst.seq = data.seq; inst.nsort = data.nsort; inst._render(); }
+}
+
+export const NOTES_KEY = KEY;

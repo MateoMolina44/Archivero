@@ -356,6 +356,10 @@ const PATTERNS = [
   [/^Listo: (\d+) piezas clasificadas, (\d+) siguen en Sin clasificar\.$/, (m) => ['Done: ' + m[1] + ' pieces sorted, ' + m[2] + ' still in Unsorted.', 'Pronto: ' + m[1] + ' peças classificadas, ' + m[2] + ' continuam em Sem classificação.']],
   [/^(\d+) (piezas?|tableros?)$/, (m) => [m[1] + ' ' + count(m, 'en'), m[1] + ' ' + count(m, 'pt')]],
   [/^(\d+) piezas? en (\d+) tableros?$/, (m) => [m[1] + ' pieces in ' + m[2] + ' boards', m[1] + ' peças em ' + m[2] + ' quadros']],
+  [/^Copia (descargada|restaurada): (\d+) piezas, (\d+) tableros y (\d+) notas\.$/, (m) => [
+    'Backup ' + (m[1] === 'descargada' ? 'downloaded' : 'restored') + ': ' + m[2] + ' pieces, ' + m[3] + ' boards and ' + m[4] + ' notes.',
+    'Cópia ' + (m[1] === 'descargada' ? 'baixada' : 'restaurada') + ': ' + m[2] + ' peças, ' + m[3] + ' quadros e ' + m[4] + ' notas.',
+  ]],
   [/^Tablero #(\d+)$/, (m) => ['Board #' + m[1], 'Quadro #' + m[1]]],
   [/^Buscar en (.*)…$/, (m, t) => ['Search ' + t(m[1]) + '…', 'Buscar em ' + t(m[1]) + '…']],
   [/^Tamaño en el tablero: (.*)$/, (m, t) => ['Size on the board: ' + t(m[1]), 'Tamanho no quadro: ' + t(m[1])]],

@@ -1,6 +1,6 @@
 # Archivero — contexto para seguir en Claude Code
 
-Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.3.6, 24/10/2026). Leelo entero antes de tocar código.
+Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.3.8, 24/10/2026). Leelo entero antes de tocar código.
 
 ## Quién y cómo
 - Usuario: Mateo (Rosario, Argentina). Escribe en **español rioplatense**: respondele en español rioplatense, claro y sin vueltas.
@@ -82,6 +82,9 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
   - Clic derecho sobre imagen, video, enlace, texto o página → "Guardar … en Archivero"; atajo Alt+Shift+S.
   - Aviso en la página al guardar: con el tema y el idioma, 2 s en pantalla (el mouse encima lo pausa), con "Cambiar" para corregir tablero y etiquetas.
 
+## Copia local
+- Exportar/Importar copia (Reglas y ajustes → Copia local) lleva la librería, los medios y las notas del Anotador (campo `notes`). Lo arma `backupExport`/`backupImport` en `patches.js`; una copia vieja sin `notes` no toca las notas actuales.
+
 ## Quitado a propósito
 - Las maquetas del diseño que no hacían nada: nube (sincronizar), "copia automática en este equipo", herramienta "Captura de pantalla" del Anotador.
 - La pieza elevada con resumen del mosaico y la vista anterior de pantalla completa (título escrito, Mezclar, Ajuste, Anterior/Siguiente).
@@ -89,9 +92,8 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 
 ## Pendientes
 1. **Nube real:** no existe; se sacó la maqueta.
-2. **Notas en la copia local:** Exportar/Importar no incluye las notas del Anotador.
-3. **Intro:** decidir si vuelve el cajón 3D.
-4. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
+2. **Intro:** decidir si vuelve el cajón 3D.
+3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
 
 ## Generador del diseño (si querés seguir editando los `.dc.html`)
 - `make.sh` corre en orden:

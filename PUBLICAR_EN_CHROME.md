@@ -1,9 +1,9 @@
 # Publicar Archivero en Chrome Web Store
 
-Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de `extension/dist/` después de `npm run build`; `manifest.json` tiene que quedar en la raíz del zip).
+Archivo a subir: `archivero-extension-vX.Y.Z.zip` (se arma comprimiendo el contenido de `extension/dist/` después de `npm run build`; `manifest.json` tiene que quedar en la raíz del zip).
 
 ## 0. Probala antes de subirla
-1. Descomprimí `archivero-extension.zip` en una carpeta.
+1. Descomprimí `archivero-extension-vX.Y.Z.zip` en una carpeta.
 2. Abrí `chrome://extensions`, activá **Modo desarrollador** → **Cargar descomprimida** → elegí esa carpeta.
 3. Probá: clic derecho en una imagen → "Guardar imagen en Archivero", Alt+Shift+S en una página, el aviso con "Cambiar", el popup y "Abrir mi librería".
 4. Si algo falla, avisame antes de publicar: la tienda tarda en revisar cada versión.
@@ -14,7 +14,7 @@ Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de
 3. En **Cuenta**, completá el nombre que va a aparecer como editor y verificá el email de contacto.
 
 ## 2. Subir el paquete
-1. En el panel: **Agregar elemento nuevo** → subí `archivero-extension.zip`.
+1. En el panel: **Agregar elemento nuevo** → subí `archivero-extension-vX.Y.Z.zip`.
 2. Se crea el borrador con el nombre, la versión (0.2.0) y los íconos del manifest.
 
 ## 3. Ficha de la tienda (pestaña "Ficha de Play Store" / "Store listing")

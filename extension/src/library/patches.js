@@ -12,6 +12,7 @@ import { patchSearchTemplate, searchVals } from './search.js';
 import { patchFullscreenTemplate, fullscreenVals } from './fullscreen.js';
 import { patchIntroTemplate, introVals } from './intro.js';
 import { LANGS } from '../core/i18n.js';
+import { notesBackup, restoreNotes, NOTES_KEY } from './notes.js';
 
 const UNSORTED = 'Sin clasificar';
 
@@ -448,6 +449,9 @@ function patchClass(name, Component) {
     if (vals.ed && vals.ed.conds) vals.ed.conds.forEach((c) => { c.kinds = c.kinds.filter((k) => k.v !== 'proj'); });
     // "Volver a aplicar" de verdad, sobre lo que está en Sin clasificar.
     vals.reapply = () => this.setState({ rmsg: reapply(this) });
+    // Copia local con las notas del Anotador.
+    if (vals.rExport) vals.rExport = () => backupExport(this);
+    if (vals.rImpFile) vals.rImpFile = (e) => backupImport(this, e);
     // El diseño suma "Sin clasificar" como tablero virtual; acá ya existe como tablero real.
     if (vals.ed && vals.ed.tos) vals.ed.tos = vals.ed.tos.filter((t, i, a) => a.findIndex((x) => x.v === t.v) === i);
     if (vals.rBoards) vals.rBoards = vals.rBoards.filter((b, i, a) => a.findIndex((x) => x.name === b.name) === i);
@@ -464,6 +468,59 @@ function isSpotify(it) {
 function fitsFullscreen(it) {
   return it.kind === 'img' || (it.kind === 'link' && !embedOf(it.url));
 }
+
+// Copia local. Igual que la del diseño, más las notas del Anotador: viven en la misma store de medios
+// pero son un objeto (no un archivo), y la del diseño las dejaba afuera al pasar todo a data URL.
+// Van en su propio campo; una copia vieja, sin ese campo, no toca las notas actuales.
+function backupExport(inst) {
+  const L = inst.lib();
+  const notes = notesBackup();
+  const out = { app: 'archivero', v: 1, exported: Date.now(), lib: L, media: {}, notes };
+  const conv = (v) => new Promise((res) => {
+    if (typeof v === 'string') return res(v);
+    if (!(v instanceof Blob)) return res('');
+    const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = () => res(''); fr.readAsDataURL(v);
+  });
+  const finish = (m) => {
+    delete m[NOTES_KEY];
+    Promise.all(Object.keys(m).map((k) => conv(m[k]).then((d) => { if (d) out.media[k] = d; }))).then(() => {
+      try {
+        const url = URL.createObjectURL(new Blob([JSON.stringify(out)], { type: 'application/json' }));
+        if (inst.rDl) { inst.rDl.href = url; inst.rDl.click(); }
+        inst.setState({ rmsg: 'Copia descargada: ' + backupSummary(L, notes) });
+      } catch (e) { inst.setState({ rmsg: 'No se pudo descargar la copia desde acá.' }); }
+    });
+  };
+  inst.mediaDB((db) => {
+    const m = Object.assign({}, inst._media || {});
+    if (!db) return finish(m);
+    try {
+      const rq = db.transaction('media', 'readonly').objectStore('media').openCursor();
+      rq.onsuccess = () => { const c = rq.result; if (c) { m[c.key] = c.value; c.continue(); } else finish(m); };
+      rq.onerror = () => finish(m);
+    } catch (e) { finish(m); }
+  });
+}
+
+function backupImport(inst, e) {
+  const f = e.target.files && e.target.files[0]; e.target.value = ''; if (!f) return;
+  const fr = new FileReader();
+  fr.onload = () => {
+    let d = null;
+    try { d = JSON.parse(fr.result); } catch (er) { d = null; }
+    if (!d || !d.lib || !Array.isArray(d.lib.boards) || !Array.isArray(d.lib.items)) return inst.setState({ rmsg: 'Ese archivo no es una copia de Archivero.' });
+    inst._lib = d.lib;
+    Object.keys(d.media || {}).forEach((k) => { if (k !== NOTES_KEY) inst.mediaPut(k, d.media[k]); });
+    inst._urls = {};
+    const notes = d.notes && Array.isArray(d.notes.notes) ? d.notes : null;
+    if (notes) restoreNotes(notes);
+    inst.commit();
+    inst.setState({ rmsg: 'Copia restaurada: ' + backupSummary(d.lib, notes || notesBackup()) });
+  };
+  fr.readAsText(f);
+}
+
+const backupSummary = (L, notes) => L.items.length + ' piezas, ' + L.boards.length + ' tableros y ' + notes.notes.length + ' notas.';
 
 function snapshot(inst) {
   return JSON.stringify([inst.rules, inst.rseq, inst.rprojs, inst.rprefs, inst.state.rproj || 0]);
