@@ -5,7 +5,7 @@
 import { openDB } from '../core/db.js';
 import * as settings from '../core/settings.js';
 import { applyRules, mergeTags } from '../core/rules.js';
-import { embedOf } from '../core/embeds.js';
+import { embedOf, SPOTIFY_W, SPOTIFY_H } from '../core/embeds.js';
 import { mosaicBox, packMosaic, clampPan } from './mosaic.js';
 import { previewMeta, fetchBlob } from '../core/pagemeta.js';
 
@@ -20,8 +20,31 @@ const CARD_PREVIEW = '<sc-if value="{{it.pvOn}}"><span style="flex:1;min-height:
   + '<sc-if value="{{it.pvPlay}}"><span style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3.5v9l7.5-4.5z" fill="#111"/></svg></span></sc-if>'
   + '</span></sc-if>';
 
+// Reproductor de Spotify ocupando toda la tarjeta de un tablero, escalado desde su tamaño natural.
+const SPOTIFY_CARD = '<sc-if value="{{it.spFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
+  + '<iframe src="{{it.spFrame}}" title="Vista previa" loading="lazy" tabindex="-1" style="{{it.spStyle}}"></iframe></span></sc-if>';
+
 // Reproductor de sitios sin portada (Spotify, X, TikTok, Vimeo) dentro de una pieza del mosaico.
-const TILE_FRAME = '<sc-if value="{{t.pvFrame}}"><iframe src="{{t.pvFrame}}" title="Vista previa" loading="lazy" tabindex="-1" style="position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none;background:#1f1f1f"></iframe></sc-if>';
+const TILE_FRAME = '<sc-if value="{{t.pvFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
+  + '<iframe src="{{t.pvFrame}}" title="Vista previa" loading="lazy" tabindex="-1" style="{{t.pvStyle}}"></iframe></span></sc-if>';
+
+// Reproductor dibujado a su tamaño natural y escalado para llenar una caja de ancho w.
+const FRAME_FILL = 'position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none';
+const spotifyFill = (w) => 'position:absolute;left:0;top:0;width:' + SPOTIFY_W + 'px;height:' + SPOTIFY_H + 'px;border:0;pointer-events:none;'
+  + 'transform:scale(' + (w / SPOTIFY_W).toFixed(4) + ');transform-origin:0 0';
+
+// Tamaño de letra de un texto según cuántos caracteres tiene y el lugar disponible (w×h, sin el
+// relleno): los textos cortos se ven grandes y los largos bajan hasta el tamaño de lectura.
+function fitText(text, w, h, lh) {
+  const s = String(text || '').trim();
+  if (!s) return 15;
+  const lines = s.split('\n').length;
+  const longest = Math.max(1, ...s.split(/\s+/).map((x) => x.length));
+  // Un carácter ocupa ~0,55 em de ancho; el 1,3 deja lugar a los cortes de línea.
+  let fs = Math.sqrt((w * h) / (s.length * 0.55 * lh * 1.3));
+  fs = Math.min(fs, w / (longest * 0.6), h / (lines * lh));
+  return Math.round(Math.max(13, Math.min(64, fs)));
+}
 
 // Ficha completa: el reproductor real (se puede usar) o la imagen de la página.
 const FICHA_PREVIEW = '<sc-if value="{{pe.pvOn}}"><div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">'
@@ -34,9 +57,13 @@ const FULL_FRAME = '<sc-if value="{{p.pvFrame}}"><iframe src="{{p.pvFrame}}" tit
 
 const TEMPLATE_PATCHES = {
   Archivo: [
-    ['<sc-if value="{{it.isLink}}" hint-placeholder-val="{{false}}"><span style="display:flex;flex-direction:column;height:100%">', (m) => m + CARD_PREVIEW],
+    ['<sc-if value="{{it.isLink}}" hint-placeholder-val="{{false}}"><span style="display:flex;flex-direction:column;height:100%">', (m) => m + SPOTIFY_CARD + CARD_PREVIEW],
+    ['background:var(--pill);font-size:15px;line-height:1.55', () => 'background:var(--pill);font-size:{{it.tfs}}px;line-height:1.55'],
   ],
-  Main: [['{{t.dom}}</span></sc-if>', (m) => m + TILE_FRAME]],
+  Main: [
+    ['{{t.dom}}</span></sc-if>', (m) => m + TILE_FRAME],
+    ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5'],
+  ],
   Main1: [['\n      </div>\n      <div class="dark"', (m) => FULL_FRAME + m]],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
   Anotador: [['scale({{fs}})', () => 'scale({{stageScale}})']],
@@ -79,6 +106,8 @@ const frameStyle = (pv) => (pv.site === 'spotify' ? 'width:100%;max-width:760px;
 function previewOf(inst, it) {
   if (!it || it.kind !== 'link') return null;
   const e = embedOf(it.url);
+  // Spotify se muestra siempre con su reproductor, también en las tarjetas y el mosaico.
+  if (e && e.site === 'spotify') return { img: '', frame: e.frame, cardFrame: e.frame, play: false, site: e.site, spotify: true };
   const saved = it.pv ? inst.srcOf({ id: 'prev:' + it.id }) : '';
   if (!it.pv && !(e && e.thumb)) fetchPreview(inst, it);
   if (e) {
@@ -144,9 +173,34 @@ function patchClass(name, Component) {
     proto.mchunk = function (its, VW, VH, G) {
       const key = its.map((i) => i.id + ':' + (i.ow || '') + 'x' + (i.oh || '')).join(',') + '|' + VW + 'x' + VH;
       if (this._mc && this._mc.key === key) return this._mc;
-      const lay = packMosaic(its.map((it) => { const [w, h] = mosaicBox(this, it); return { it, w, h }; }), VW, VH, G);
+      const lay = packMosaic(its.map((it) => { const [w, h] = mosaicBox(this, it, isSpotify(it)); return { it, w, h }; }), VW, VH, G);
       this._mc = { key, W: lay.W, H: lay.H, lay, cells: (ci, cj) => (ci === 0 && cj === 0 ? lay.cells : []) };
       return this._mc;
+    };
+  }
+
+  // Tableros: Spotify ocupa una tarjeta horizontal, con la proporción de su reproductor.
+  if (proto.shapeOf) {
+    const shapeOf = proto.shapeOf;
+    proto.shapeOf = function (it) {
+      if (isSpotify(it)) return { a: SPOTIFY_W / SPOTIFY_H, c: 2, lab: 'música embebida · horizontal' };
+      return shapeOf.call(this, it);
+    };
+  }
+
+  // Pantalla completa (vista 1): solo imágenes y enlaces a páginas web (sin reproductores).
+  if (name === 'Main1') {
+    proto.order = function () {
+      const all = this.allItems().filter(fitsFullscreen);
+      const ids = all.map((x) => x.id);
+      if (!this._perm) {
+        this._perm = ids.slice();
+        for (let i = this._perm.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [this._perm[i], this._perm[j]] = [this._perm[j], this._perm[i]]; }
+      }
+      // Lo nuevo entra adelante; lo que se borró (o dejó de entrar) sale.
+      const known = this._perm.filter((id) => ids.includes(id));
+      this._perm = ids.filter((id) => !known.includes(id)).concat(known);
+      return this._perm.map((id) => all.find((x) => x.id === id));
     };
   }
 
@@ -154,16 +208,15 @@ function patchClass(name, Component) {
   proto.renderVals = function () {
     let mc = null;
     if (name === 'Main') {
-      // Antes de armar la pantalla, el encuadre se limita al mosaico.
       const VW = window.innerWidth || 1440, VH = window.innerHeight || 900;
       const its = this.allItems();
       if (its.length) {
         mc = this.mchunk(its, VW, VH, 12);
-        // La primera vez arranca arriba a la izquierda, con el margen del buscador.
-        if (!this._panInit) { this._panInit = true; this.state.px = this.state.py = 1e6; }
-        const [px, py] = clampPan(mc.W, mc.H, VW, VH, this.state.px, this.state.py);
-        this.state.px = px;
-        this.state.py = py;
+        // La primera vez se encuadra el mosaico; después el lienzo se arrastra sin límite.
+        if (!this._panInit) {
+          this._panInit = true;
+          [this.state.px, this.state.py] = clampPan(mc.W, mc.H, VW, VH, 1e6, 1e6);
+        }
       }
     }
     const vals = renderVals.call(this);
@@ -186,10 +239,11 @@ function patchClass(name, Component) {
     if (name === 'Main' && mc && vals.tiles) {
       vals.tiles.forEach((t, i) => {
         const c = mc.lay.cells[i];
+        if (c && c.it.kind === 'text') t.tfs = fitText(c.it.text, t.w - 32, t.h - 28, 1.5);
         const pv = c && previewOf(this, c.it);
         if (!pv) return;
         if (pv.img) { t.bg = 'url("' + pv.img + '") center/cover no-repeat'; t.isLink = false; }
-        else if (pv.cardFrame) { t.pvFrame = pv.cardFrame; t.isLink = false; }
+        else if (pv.cardFrame) { t.pvFrame = pv.cardFrame; t.pvStyle = pv.spotify ? spotifyFill(t.w) : FRAME_FILL; t.isLink = false; }
       });
     }
 
@@ -197,9 +251,12 @@ function patchClass(name, Component) {
       const b = this.curBoard();
       const its = b ? this.sortedItems(b) : [];
       vals.cards.forEach((c, i) => {
-        const pv = previewOf(this, its[i]);
+        const it = its[i];
+        if (it && it.kind === 'text') c.tfs = fitText(it.text, c.w - 44, c.h - 40 - (it.title ? 32 : 0), 1.55);
+        const pv = previewOf(this, it);
         if (!pv) return;
-        Object.assign(c, { pvOn: true, pvImg: pv.img, pvFrame: pv.img ? '' : pv.cardFrame, pvPlay: pv.play, embPost: false, embDark: false });
+        if (pv.spotify) Object.assign(c, { spFrame: pv.frame, spStyle: spotifyFill(c.w), embPost: false, embDark: false });
+        else Object.assign(c, { pvOn: true, pvImg: pv.img, pvFrame: pv.img ? '' : pv.cardFrame, pvPlay: pv.play, embPost: false, embDark: false });
       });
     }
 
@@ -268,6 +325,16 @@ function patchClass(name, Component) {
     if (vals.rBoards) vals.rBoards = vals.rBoards.filter((b, i, a) => a.findIndex((x) => x.name === b.name) === i);
     return vals;
   };
+}
+
+function isSpotify(it) {
+  const e = it && it.kind === 'link' ? embedOf(it.url) : null;
+  return !!e && e.site === 'spotify';
+}
+
+// Entra en la pantalla completa: imágenes (y GIF) o enlaces a páginas que no son un reproductor.
+function fitsFullscreen(it) {
+  return it.kind === 'img' || (it.kind === 'link' && !embedOf(it.url));
 }
 
 function snapshot(inst) {

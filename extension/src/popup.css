@@ -1,9 +1,8 @@
 /* Popup de la extensión: misma dirección de arte que el aviso al guardar (panel #575757, campos #464646, chips #d9d9d9). */
 * { box-sizing: border-box; }
 html { background: #575757; }
-/* Mismo borde que los paneles y pastillas del diseño (línea clara de 1 px y brillo interno arriba). */
-body { width: 340px; margin: 0; padding: 18px; background: #575757; color: #fff; font: 13px/1.4 Inter, system-ui, sans-serif;
-  border: 1px solid rgba(255, 255, 255, .12); border-radius: 12px; box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, .12); box-sizing: border-box; }
+/* Sin borde propio: la ventana del popup ya trae el suyo, y desde la página no se puede redondear. */
+body { width: 340px; margin: 0; padding: 18px; background: #575757; color: #fff; font: 13px/1.4 Inter, system-ui, sans-serif; }
 h1 { margin: 0; font-size: 18px; font-weight: 700; }
 .sub { margin: 2px 0 16px; font-size: 12px; color: #fff; opacity: .75; }
 label { display: block; margin-bottom: 6px; font-size: 11px; font-weight: 600; opacity: .85; }

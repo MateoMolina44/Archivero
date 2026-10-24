@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Archivero",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Guardá inspiraciones (imágenes, links, textos, videos, herramientas) y se organizan solas según tus reglas.",
   "permissions": ["contextMenus", "activeTab", "scripting", "storage", "unlimitedStorage"],
   "host_permissions": ["<all_urls>"],

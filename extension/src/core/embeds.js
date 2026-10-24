@@ -3,6 +3,11 @@
 // - thumb: imagen de portada, cuando el sitio la publica en una URL fija.
 // Para cualquier otro sitio la vista previa es la imagen Open Graph o la captura que guarda la extensión.
 
+// Tamaño natural del reproductor de Spotify en su forma horizontal (portada a la izquierda y
+// título a la derecha). En las tarjetas se dibuja a este tamaño y se escala, para que se vea igual.
+export const SPOTIFY_W = 720;
+export const SPOTIFY_H = 352;
+
 function parse(url) {
   try {
     return new URL(url);

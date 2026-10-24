@@ -3,12 +3,16 @@
 // direcciones y rellenados con un treemap que estiraba y recortaba las piezas.
 // Acá es un solo bloque, sin repeticiones, que crece a medida que se agregan piezas,
 // y cada pieza conserva sus proporciones (sin recortes ni ampliaciones por encima de su tamaño real).
+// El lienzo se sigue pudiendo arrastrar sin límite; fuera del bloque queda vacío.
+
+import { SPOTIFY_W, SPOTIFY_H } from '../core/embeds.js';
 
 const STEP = 4; // resolución del perfil de alturas, en px
 
 // Tamaño de cada pieza: el de mbox() del diseño, pero corrigiendo las imágenes y videos chicos
-// para que nunca se deformen.
-export function mosaicBox(inst, it) {
+// para que nunca se deformen. Spotify toma la forma horizontal de su reproductor.
+export function mosaicBox(inst, it, spotify) {
+  if (spotify) return [460, Math.round(460 * SPOTIFY_H / SPOTIFY_W)];
   let [w, h] = inst.mbox(it);
   if (it.kind === 'img' || it.kind === 'video') {
     const r = (it.ow || it.w || 800) / (it.oh || it.h || 800);
@@ -46,8 +50,8 @@ export function packMosaic(entries, VW, VH, G) {
   return { W: right, H, cells };
 }
 
-// Encuadre: si el mosaico entra en la pantalla queda centrado; si no, se puede recorrer
-// solo hasta sus bordes (con margen para el buscador y la botonera).
+// Encuadre inicial: si el mosaico entra en la pantalla queda centrado; si no, arriba a la
+// izquierda (con margen para el buscador y la botonera).
 export function clampPan(W, H, VW, VH, px, py) {
   const PAD = { l: 40, r: 40, t: 84, b: 104 };
   const axis = (size, view, a, b, p) =>
