@@ -1,8 +1,5 @@
 /* Ajustes visuales sobre el CSS del diseño (que se inyecta después, por eso los !important). */
 
-/* Buscador: texto fijo, sin brillo animado. */
-.shm { animation: none !important; background: none !important; color: #ececec !important; -webkit-text-fill-color: #ececec !important; }
-
 /* Buscador y botonera: aparecen con el mismo fundido que en el mosaico (ui-in de Main) en todas
    las vistas. En el mosaico ya lo hace el diseño, sincronizado con la intro. */
 @keyframes arch-ui-in { 0% { opacity: 0 } 100% { opacity: 1 } }

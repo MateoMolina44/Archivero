@@ -69,6 +69,7 @@ Sincronizar en la nube|Sync to the cloud|Sincronizar na nuvem
 Sincronizar ahora|Sync now|Sincronizar agora
 Maqueta: la cuenta en la nube se conecta en la app real. Ahora tenés|Mockup: the cloud account connects in the real app. Right now you have|Maquete: a conta na nuvem se conecta no app real. Agora você tem
 Copia local|Local backup|Cópia local
+Bajá una copia de tu librería a este equipo y restaurala cuando quieras.|Download a backup of your library to this device and restore it whenever you want.|Baixe uma cópia da sua biblioteca neste dispositivo e restaure quando quiser.
 Exportar copia (.json)|Export backup (.json)|Exportar cópia (.json)
 Importar copia|Import backup|Importar cópia
 Atajo para guardar: Alt+Shift+S · clic derecho sobre imágenes y texto|Shortcut to save: Alt+Shift+S · right-click on images and text|Atalho para salvar: Alt+Shift+S · clique direito em imagens e texto

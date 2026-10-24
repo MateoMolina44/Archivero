@@ -111,9 +111,43 @@ function patchTemplate(name, template) {
     }
     template = template.split(find).join(make(find));
   }
+  template = cutMockups(name, template);
   if (name === 'Main' && INTRO) template = patchIntroTemplate(template);
   if (name === 'Main1') template = patchFullscreenTemplate(template);
   return patchSearchTemplate(name, template);
+}
+
+// Quita de la plantilla el tramo que empieza en `from` y llega hasta `to` (que también se quita si
+// withTo). Si el diseño cambió y no lo encuentra, la deja como está.
+function cut(name, template, from, to, withTo) {
+  const a = template.indexOf(from);
+  const b = a < 0 ? -1 : template.indexOf(to, a + from.length);
+  if (b < 0) {
+    console.warn('[Archivero] El diseño cambió: no encontré', from, 'en', name);
+    return template;
+  }
+  return template.slice(0, a) + template.slice(withTo ? b + to.length : b);
+}
+
+// Partes del diseño que eran maquetas y en la extensión no hacen nada:
+// - "Sincronizar en la nube" (la nube no existe todavía): Nube y copia queda solo con la copia local.
+// - La herramienta "Captura de pantalla" del Anotador, que insertaba un rectángulo gris de ejemplo.
+// - En el mosaico, la pieza elevada con su resumen: tocar una pieza abre directamente la ficha.
+const CLOUD_ROW = '<div class="rz-r" style="cursor:default;max-width:620px">\n              <span style="flex:1;min-width:0"><span style="display:block;font-size:14px;font-weight:600">Sincronizar en la nube</span>';
+const LOCAL_TITLE = '<div style="font-size:14px;font-weight:700;margin-bottom:8px">Copia local</div>';
+const CLOUD_TEXT = 'Tu librería se guarda en la nube para abrirla desde cualquier computadora. Además podés bajar una copia a este equipo y restaurarla cuando quieras.';
+function cutMockups(name, template) {
+  if (template.includes(CLOUD_ROW)) {
+    template = cut(name, template, CLOUD_ROW, LOCAL_TITLE, true)
+      .replace('>Nube y copia local<', '>Copia local<')
+      .replace(CLOUD_TEXT, 'Bajá una copia de tu librería a este equipo y restaurala cuando quieras.');
+  }
+  if (name === 'Anotador') {
+    template = cut(name, template, '<button onClick="{{tShot}}"', '</button>', true);
+    template = cut(name, template, '<sc-if value="{{o.shot}}"', '</sc-if>', true);
+  }
+  if (name === 'Main') template = cut(name, template, '<sc-if value="{{sel}}"', '<!-- Pieza: ver y editar -->', false);
+  return template;
 }
 
 // ---------- vistas previas de enlaces ----------
@@ -229,7 +263,22 @@ function patchClass(name, Component) {
   }
 
   // Pantalla completa (vista 1): solo imágenes y enlaces a páginas web (sin reproductores).
+  // El diseño escribía "Buscar…" letra por letra con un intervalo que redibuja la pantalla cada
+  // 40 ms durante varios segundos al entrar. El buscador ahora tiene el texto fijo: se corta.
+  // En la pantalla completa también se corta la escritura del título de la vista anterior.
+  if (proto.componentDidMount) {
+    const didMount = proto.componentDidMount;
+    proto.componentDidMount = function () {
+      didMount.call(this);
+      clearInterval(this.tiv);
+      if (name === 'Main1') clearTimeout(this.t1);
+    };
+  }
+
   if (name === 'Main1') {
+    // La vista anterior (una pieza por pantalla, con su título e información) ya no se dibuja
+    // (fullscreen.js): sin nombres, el diseño no arma sus piezas en cada cuadro.
+    proto.names = function () { return []; };
     proto.order = function () {
       const all = this.allItems().filter(fitsFullscreen);
       const ids = all.map((x) => x.id);
@@ -280,7 +329,7 @@ function patchClass(name, Component) {
       vals.langOpts = LANGS.map(([k, l]) => ({ k, l, on: cur === k ? 'true' : 'false', bg: cur === k ? '#fff' : 'var(--chip)', pick: () => this.uiSet({ lang: k }) }));
     }
 
-    // Buscador: sin la animación de escritura ni el brillo, y con búsqueda real (search.js).
+    // Buscador: sin la animación de escritura (queda el brillo del diseño) y con búsqueda real (search.js).
     if (vals.s) vals.s = { t: 'Buscar…', c: false };
     searchVals(this, name, vals);
 
@@ -383,6 +432,10 @@ function patchClass(name, Component) {
     }
     // Proyectos: fuera de la barra lateral y de los tipos de condición.
     if (vals.rTabs) vals.rTabs = vals.rTabs.filter((t) => t.label !== 'Proyectos');
+    // Sin la nube (maqueta), la pestaña queda solo con la copia local; y la "copia automática en
+    // este equipo" era un interruptor sin función.
+    if (vals.rTabs) vals.rTabs.forEach((t) => { if (t.label === 'Nube y copia') t.label = 'Copia local'; });
+    if (vals.rPrefs) vals.rPrefs = vals.rPrefs.filter((o) => o.label !== 'Guardar también una copia automática en este equipo');
     if (vals.rTabs && vals.rt) {
       const on = this.state.rtab === 'creditos';
       vals.rt.creditos = on;
