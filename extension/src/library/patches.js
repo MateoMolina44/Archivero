@@ -28,6 +28,13 @@ const SPOTIFY_CARD = '<sc-if value="{{it.spFrame}}"><span style="position:absolu
 const TILE_FRAME = '<sc-if value="{{t.pvFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
   + '<iframe src="{{t.pvFrame}}" title="Vista previa" loading="lazy" tabindex="-1" style="{{t.pvStyle}}"></iframe></span></sc-if>';
 
+// Pieza elevada al hacer clic en el mosaico: el diseño solo pinta su fondo, así que acá se le suma
+// el reproductor o el texto (si no, los reproductores y los textos quedaban como un cuadro gris).
+const PIECE_ANCHOR = '<div style="{{pieceStyle}}">';
+const PIECE_CONTENT = '<sc-if value="{{selFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
+  + '<iframe src="{{selFrame}}" title="Vista previa" tabindex="-1" style="{{selFrameStyle}}"></iframe></span></sc-if>'
+  + '<sc-if value="{{selText}}"><span style="position:absolute;inset:0;padding:14px 16px;box-sizing:border-box;font-size:{{selTfs}}px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;overflow:hidden;text-align:left;color:#fff">{{selText}}</span></sc-if>';
+
 // Reproductor dibujado a su tamaño natural y escalado para llenar una caja de ancho w.
 const FRAME_FILL = 'position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none';
 const spotifyFill = (w) => 'position:absolute;left:0;top:0;width:' + SPOTIFY_W + 'px;height:' + SPOTIFY_H + 'px;border:0;pointer-events:none;'
@@ -39,10 +46,10 @@ function fitText(text, w, h, lh) {
   const s = String(text || '').trim();
   if (!s) return 15;
   const lines = s.split('\n').length;
-  const longest = Math.max(1, ...s.split(/\s+/).map((x) => x.length));
-  // Un carácter ocupa ~0,55 em de ancho; el 1,3 deja lugar a los cortes de línea.
+  // Un carácter ocupa ~0,55 em de ancho; el 1,3 deja lugar a los cortes de línea. Las palabras
+  // muy largas se cortan donde haga falta (overflow-wrap:anywhere), así que no achican la letra.
   let fs = Math.sqrt((w * h) / (s.length * 0.55 * lh * 1.3));
-  fs = Math.min(fs, w / (longest * 0.6), h / (lines * lh));
+  fs = Math.min(fs, h / (lines * lh));
   return Math.round(Math.max(13, Math.min(64, fs)));
 }
 
@@ -62,7 +69,8 @@ const TEMPLATE_PATCHES = {
   ],
   Main: [
     ['{{t.dom}}</span></sc-if>', (m) => m + TILE_FRAME],
-    ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5'],
+    ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5;overflow-wrap:anywhere'],
+    [PIECE_ANCHOR, (m) => m + PIECE_CONTENT],
   ],
   Main1: [['\n      </div>\n      <div class="dark"', (m) => FULL_FRAME + m]],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
@@ -184,6 +192,12 @@ function patchClass(name, Component) {
     const shapeOf = proto.shapeOf;
     proto.shapeOf = function (it) {
       if (isSpotify(it)) return { a: SPOTIFY_W / SPOTIFY_H, c: 2, lab: 'música embebida · horizontal' };
+      // Textos: la tarjeta crece con la cantidad de caracteres (fila más alta y más ancha).
+      if (it && it.kind === 'text') {
+        const L = (it.text || '').trim().length;
+        const c = L < 80 ? 1 : L < 400 ? 2 : 3;
+        return { a: Math.min(3.2, 1.2 + L / 400), c, lab: 'texto ' + ['', 'corto', 'medio', 'largo'][c] };
+      }
       return shapeOf.call(this, it);
     };
   }
@@ -242,9 +256,23 @@ function patchClass(name, Component) {
         if (c && c.it.kind === 'text') t.tfs = fitText(c.it.text, t.w - 32, t.h - 28, 1.5);
         const pv = c && previewOf(this, c.it);
         if (!pv) return;
-        if (pv.img) { t.bg = 'url("' + pv.img + '") center/cover no-repeat'; t.isLink = false; }
+        if (pv.img) {
+          t.bg = 'url("' + pv.img + '") center/cover no-repeat';
+          t.isLink = false;
+          // El diseño eleva la pieza con el fondo que tenía antes de la vista previa (gris).
+          const pick = t.pick, bg = t.bg;
+          t.pick = () => { pick(); this.setState({ selTone: bg }); };
+        }
         else if (pv.cardFrame) { t.pvFrame = pv.cardFrame; t.pvStyle = pv.spotify ? spotifyFill(t.w) : FRAME_FILL; t.isLink = false; }
       });
+      // Contenido de la pieza elevada (selBoard es el id de la pieza elegida).
+      const sit = this.state.sel && this.lib().items.find((x) => x.id === this.state.selBoard);
+      const rr = this.state.rect;
+      const spv = sit && previewOf(this, sit);
+      vals.selFrame = spv && !spv.img ? spv.cardFrame : '';
+      vals.selFrameStyle = vals.selFrame && rr ? (spv.spotify ? spotifyFill(rr.w) : FRAME_FILL) : '';
+      vals.selText = sit && sit.kind === 'text' ? sit.text || '' : '';
+      vals.selTfs = vals.selText && rr ? fitText(sit.text, rr.w - 32, rr.h - 28, 1.5) : 15;
     }
 
     if (name === 'Archivo' && vals.cards && this.curBoard) {

@@ -10,9 +10,15 @@ import { SPOTIFY_W, SPOTIFY_H } from '../core/embeds.js';
 const STEP = 4; // resolución del perfil de alturas, en px
 
 // Tamaño de cada pieza: el de mbox() del diseño, pero corrigiendo las imágenes y videos chicos
-// para que nunca se deformen. Spotify toma la forma horizontal de su reproductor.
+// para que nunca se deformen. Spotify toma la forma horizontal de su reproductor y los textos
+// crecen con la cantidad de caracteres (área proporcional al largo, siempre apaisados).
 export function mosaicBox(inst, it, spotify) {
   if (spotify) return [460, Math.round(460 * SPOTIFY_H / SPOTIFY_W)];
+  if (it.kind === 'text') {
+    const area = 18000 + (it.text || '').trim().length * 260;
+    const w = Math.max(200, Math.min(540, Math.sqrt(area * 1.6)));
+    return [Math.round(w), Math.round(Math.max(120, Math.min(340, w / 1.6)))];
+  }
   let [w, h] = inst.mbox(it);
   if (it.kind === 'img' || it.kind === 'video') {
     const r = (it.ow || it.w || 800) / (it.oh || it.h || 800);
