@@ -30,7 +30,7 @@ Archivero isn't on the Chrome Web Store yet, so you install it by hand. It works
 
 ### Option A: download the ready-made extension (easiest)
 
-1. Go to the [latest release](https://github.com/MateoMolina44/archivero/releases/latest) and download `archivero-extension-vX.Y.Z.zip`.
+1. Go to the [latest release](https://github.com/MateoMolina44/Archivero/releases/latest) and download `archivero-extension-vX.Y.Z.zip`.
 2. Unzip it into a folder you'll keep (if you delete the folder, the extension stops working).
 3. Open `chrome://extensions` (or `edge://extensions`, `brave://extensions`…).
 4. Turn on **Developer mode** (top-right corner).
@@ -44,8 +44,8 @@ To update, download the new zip, replace the folder's contents and click the rel
 You need [Node.js](https://nodejs.org) 18 or newer.
 
 ```bash
-git clone https://github.com/MateoMolina44/archivero.git
-cd archivero/extension
+git clone https://github.com/MateoMolina44/Archivero.git
+cd Archivero/extension
 npm install
 npm run build
 ```

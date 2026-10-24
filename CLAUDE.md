@@ -18,7 +18,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - `diseno/generador/` — scripts Python que generan esos `.dc.html`. Ver "Generador del diseño".
 - `extension/` — la app real (Vite + extensión MV3). `npm install`, `npm run build` → `dist/` (extensión) y `npm run build:web` → `dist-web/` (web en Vercel). Detalles en `extension/README.md`.
 - `PUBLICAR_EN_CHROME.md` — guía para la Chrome Web Store (con las descripciones en ES/EN/PT).
-- Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` de https://github.com/MateoMolina44/archivero.
+- Web: https://archivero-green.vercel.app — se publica sola con cada push a `main` de https://github.com/MateoMolina44/Archivero.
 
 ## Cómo está armado (extension/)
 - `src/screens/*.js`: copia generada de los `.dc.html` (`npm run import-design`). **No se editan a mano**: se volverían a pisar.
