@@ -1,6 +1,6 @@
 # Archivero — contexto para seguir en Claude Code
 
-Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.4.0, 24/10/2026). Leelo entero antes de tocar código.
+Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.4.1, 24/10/2026). Leelo entero antes de tocar código.
 
 ## Quién y cómo
 - Usuario: Mateo (Rosario, Argentina). Escribe en **español rioplatense**: respondele en español rioplatense, claro y sin vueltas.
