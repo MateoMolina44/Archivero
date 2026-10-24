@@ -82,7 +82,8 @@ export function patchSearchTemplate(name, t) {
 // ---------- texto ----------
 
 const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
-const KIND_WORDS = { img: 'imagen imagenes foto fotos', video: 'video videos', link: 'enlace enlaces link links web pagina', text: 'texto textos nota' };
+// Tipos de pieza buscables por nombre, en los tres idiomas de la interfaz.
+const KIND_WORDS = { img: 'imagen imagenes foto fotos image images photo photos imagem imagens', video: 'video videos', link: 'enlace enlaces link links web pagina page pages site', text: 'texto textos nota text texts note notes' };
 
 function haystack(inst, it) {
   const b = inst.lib().boards.find((x) => x.id === it.bid);

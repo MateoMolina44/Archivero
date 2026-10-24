@@ -47,9 +47,16 @@ function look(scope, path) {
   return v;
 }
 
-const fill = (s, scope) => s.replace(/\{\{([^}]+)\}\}/g, (m, p) => {
+// Traducción (core/i18n.js): se aplica a los valores que se muestran como texto y a los atributos
+// legibles. Las partes fijas de las plantillas ya vienen traducidas (localizeTemplate).
+let tr = null;
+export function setTranslator(fn) { tr = fn; }
+const READABLE = new Set(['aria-label', 'placeholder', 'title', 'data-tip', 'alt']);
+const say = (x) => (tr && typeof x === 'string' ? tr(x) : x);
+
+const fill = (s, scope, t) => s.replace(/\{\{([^}]+)\}\}/g, (m, p) => {
   const x = look(scope, p);
-  return x == null ? '' : x;
+  return x == null ? '' : t ? say(x) : x;
 });
 const inner = (attr) => attr.match(/\{\{(.*)\}\}/)[1];
 
@@ -69,7 +76,7 @@ function childrenOf(node) {
 
 function build(node, scope, out) {
   if (node.nodeType === 3) {
-    out.push({ t: '#t', v: fill(node.textContent, scope) });
+    out.push({ t: '#t', v: fill(node.textContent, scope, true) });
     return;
   }
   if (node.nodeType !== 1) return;
@@ -98,9 +105,9 @@ function build(node, scope, out) {
       const x = look(scope, m[1]);
       if (a.name === 'ref') { ref = x; continue; }
       if (/^on[a-z]/i.test(a.name)) { ev[a.name.slice(2).toLowerCase()] = x; continue; }
-      attrs[a.name] = x;
+      attrs[a.name] = READABLE.has(a.name) ? say(x) : x;
     } else {
-      attrs[a.name] = fill(a.value, scope);
+      attrs[a.name] = fill(a.value, scope, READABLE.has(a.name));
     }
   }
   const kids = [];

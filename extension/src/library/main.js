@@ -2,7 +2,7 @@
 // sin recargar (evita el parpadeo que había en Claude Design).
 import './fonts.js';
 import './overrides.css';
-import { mount, start, unmount } from '../dc/runtime.js';
+import { mount, start, unmount, setTranslator } from '../dc/runtime.js';
 import * as Main from '../screens/Main.js';
 import * as Main1 from '../screens/Main1.js';
 import * as Archivo from '../screens/Archivo.js';
@@ -13,6 +13,7 @@ import { drain } from './ingest.js';
 import { loadNotes, attachNotes, detachNotes } from './notes.js';
 import * as settings from '../core/settings.js';
 import { onChange } from '../core/db.js';
+import { translate, localizeTemplate, uiLang, trackMissing } from '../core/i18n.js';
 
 const S = Object.fromEntries([Main, Main1, Archivo, Anotador, Seleccion].map((s) => [s.name, prepareScreen(s)]));
 
@@ -30,6 +31,29 @@ const ROUTES = {
 const host = document.getElementById('app');
 let current = null;
 
+// Idioma (Apariencia → Idioma): las plantillas se traducen una vez por idioma y los textos que
+// arman las pantallas, al dibujar.
+let lang = uiLang();
+const localized = new Map();
+function localScreen(screen) {
+  const key = screen.name + ':' + lang;
+  if (!localized.has(key)) localized.set(key, Object.assign({}, screen, { template: localizeTemplate(screen.template, lang) }));
+  return localized.get(key);
+}
+setTranslator((s) => translate(s, lang));
+document.documentElement.lang = lang;
+trackMissing();
+
+// La botonera, el buscador y el carrete aparecen con un fundido al entrar a la pantalla. Después se
+// apaga: si un cambio de la pantalla los vuelve a crear (por ejemplo, al crear una nota en el
+// Anotador) no tienen que animarse otra vez.
+let uiTimer = null;
+function uiEntrance() {
+  host.dataset.ui = 'in';
+  clearTimeout(uiTimer);
+  uiTimer = setTimeout(() => { host.dataset.ui = 'done'; }, 1600);
+}
+
 function routeFromHash() {
   const r = location.hash.replace(/^#\/?/, '');
   return ROUTES[r] ? r : 'Main';
@@ -46,7 +70,8 @@ function show(route) {
   }
   const { screen, init, after, leave } = ROUTES[route];
   host.dataset.screen = screen.name;
-  const inst = mount(host, screen);
+  const inst = mount(host, localScreen(screen));
+  uiEntrance();
   inst._leave = leave;
   const commit = inst.commit;
   inst.commit = function () {
@@ -64,6 +89,7 @@ function show(route) {
   start(inst);
   if (after) after(inst);
   syncBoards(inst);
+  syncUi();
   drain(inst);
 }
 
@@ -71,6 +97,13 @@ function show(route) {
 function syncBoards(inst) {
   const names = inst.lib().boards.map((b) => b.name);
   if (JSON.stringify(names) !== JSON.stringify(settings.get().boards)) settings.save({ boards: names });
+}
+
+// …y la apariencia elegida (al cambiarla se copia en patches.js; esto cubre la que ya estaba elegida).
+function syncUi() {
+  let ui = null;
+  try { ui = JSON.parse(localStorage.getItem('archivero.ui.v1') || 'null'); } catch { /* sin acceso */ }
+  if (ui && JSON.stringify(ui) !== JSON.stringify(settings.get().ui)) settings.save({ ui });
 }
 
 // Los enlaces del diseño apuntan a "Pantalla.dc.html": se resuelven acá, sin recargar.
@@ -84,6 +117,19 @@ document.addEventListener('click', (e) => {
   else location.hash = '#/' + route;
 });
 window.addEventListener('hashchange', () => show(routeFromHash()));
+
+// Cambio de idioma desde Apariencia: se vuelve a montar la pantalla y queda abierto Apariencia.
+window.addEventListener('archivero:lang', () => {
+  const next = uiLang();
+  if (next === lang) return;
+  lang = next;
+  document.documentElement.lang = lang;
+  show(routeFromHash());
+  if (current && current.openR) {
+    current.openR();
+    current.setState({ rtab: 'apariencia' });
+  }
+});
 
 // Piezas nuevas guardadas por la extensión mientras la librería está abierta.
 onChange((m) => { if (m && m.store === 'inbox') drain(current); });

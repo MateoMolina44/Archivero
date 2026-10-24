@@ -9,6 +9,9 @@ import { embedOf, SPOTIFY_W, SPOTIFY_H } from '../core/embeds.js';
 import { mosaicBox, packMosaic, clampPan } from './mosaic.js';
 import { previewMeta, fetchBlob } from '../core/pagemeta.js';
 import { patchSearchTemplate, searchVals } from './search.js';
+import { patchFullscreenTemplate, fullscreenVals } from './fullscreen.js';
+import { patchIntroTemplate, introVals } from './intro.js';
+import { LANGS } from '../core/i18n.js';
 
 const UNSORTED = 'Sin clasificar';
 
@@ -28,13 +31,6 @@ const SPOTIFY_CARD = '<sc-if value="{{it.spFrame}}"><span style="position:absolu
 // Reproductor de sitios sin portada (Spotify, X, TikTok, Vimeo) dentro de una pieza del mosaico.
 const TILE_FRAME = '<sc-if value="{{t.pvFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
   + '<iframe src="{{t.pvFrame}}" title="Vista previa" loading="lazy" tabindex="-1" style="{{t.pvStyle}}"></iframe></span></sc-if>';
-
-// Pieza elevada al hacer clic en el mosaico: el diseño solo pinta su fondo, así que acá se le suma
-// el reproductor o el texto (si no, los reproductores y los textos quedaban como un cuadro gris).
-const PIECE_ANCHOR = '<div style="{{pieceStyle}}">';
-const PIECE_CONTENT = '<sc-if value="{{selFrame}}"><span style="position:absolute;inset:0;overflow:hidden;background:#1f1f1f">'
-  + '<iframe src="{{selFrame}}" title="Vista previa" tabindex="-1" style="{{selFrameStyle}}"></iframe></span></sc-if>'
-  + '<sc-if value="{{selText}}"><span style="position:absolute;inset:0;padding:14px 16px;box-sizing:border-box;font-size:{{selTfs}}px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;overflow:hidden;text-align:left;color:#fff">{{selText}}</span></sc-if>';
 
 // Reproductor dibujado a su tamaño natural y escalado para llenar una caja de ancho w.
 const FRAME_FILL = 'position:absolute;inset:0;width:100%;height:100%;border:0;pointer-events:none';
@@ -60,9 +56,6 @@ const FICHA_PREVIEW = '<sc-if value="{{pe.pvOn}}"><div style="width:100%;height:
   + '<sc-if value="{{pe.pvImg}}"><img src="{{pe.pvImg}}" alt="{{pe.title}}" style="flex:1;min-height:0;max-width:100%;object-fit:contain;border-radius:6px"></sc-if>'
   + '</div></sc-if>';
 
-// Pantalla completa (vista 1): reproductor en el lugar de la imagen.
-const FULL_FRAME = '<sc-if value="{{p.pvFrame}}"><iframe src="{{p.pvFrame}}" title="{{p.name}}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write" allowfullscreen style="{{p.pvStyle}};border:0;border-radius:10px;background:#000"></iframe></sc-if>';
-
 const TEMPLATE_PATCHES = {
   Archivo: [
     ['<sc-if value="{{it.isLink}}" hint-placeholder-val="{{false}}"><span style="display:flex;flex-direction:column;height:100%">', (m) => m + SPOTIFY_CARD + CARD_PREVIEW],
@@ -71,9 +64,9 @@ const TEMPLATE_PATCHES = {
   Main: [
     ['{{t.dom}}</span></sc-if>', (m) => m + TILE_FRAME],
     ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5;overflow-wrap:anywhere'],
-    [PIECE_ANCHOR, (m) => m + PIECE_CONTENT],
+    // Entrada de las piezas al doble de lento (los retrasos se duplican en renderVals).
+    ['animation:tile-in .8s', () => 'animation:tile-in 1.6s'],
   ],
-  Main1: [['\n      </div>\n      <div class="dark"', (m) => FULL_FRAME + m]],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
   // También pasa la compensación para que el buscador y la botonera no se escalen (overrides.css).
   Anotador: [['scale({{fs}})', () => 'scale({{stageScale}});--ui-k:{{uiK}};--ui-y:{{uiY}}px']],
@@ -85,6 +78,22 @@ const FICHA_LEFT = '<div style="flex:1;min-width:0;background:var(--field);displ
 const GO_BUTTON = '<sc-if value="{{pe.goOn}}"><a class="ob" href="{{pe.goHref}}" target="_blank" rel="noopener" title="{{pe.goHref}}" style="position:absolute;left:16px;top:16px;z-index:2;display:inline-flex;align-items:center;gap:6px;text-decoration:none">Ir al sitio'
   + '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h7v7M13 3L4 12"/></svg></a></sc-if>';
 
+// Reglas y ajustes: pestaña Manifesto (el texto del proyecto), antes de la de tableros.
+const CREDITS_ANCHOR = '<!-- Tableros -->';
+const CREDITS = '<sc-if value="{{rt.creditos}}"><div style="flex:1;padding:20px 28px;overflow:auto">'
+  + '<div style="font-size:16px;font-weight:700">Manifesto</div>'
+  + '<p style="font-size:14px;line-height:1.65;max-width:620px;margin:14px 0 0">Este proyecto fue hecho con el fin de ayudar a creativos / artistas / quien sea que lo necesite a sentir la capacidad de mantener esta falsa ilusión de posesión en esta etapa tan fugaz del presente en el que habitamos. Aunque sea tan solo por un momento.</p>'
+  + '<p style="font-size:14px;line-height:1.65;max-width:620px;margin:12px 0 0">Yo lo necesitaba, por eso lo hice. Estoy seguro que alguien mas en algún lugar del mundo se siente de la misma forma.</p>'
+  + '<div style="margin-top:22px;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);max-width:620px;font-size:12px;line-height:1.6;opacity:.85">Archivero es y siempre va a ser open source: el código está abierto para verlo, usarlo y mejorarlo.</div>'
+  + '<a class="rz-b o" href="https://github.com/MateoMolina44" target="_blank" rel="noopener" style="margin-top:12px;text-decoration:none">github.com/MateoMolina44'
+  + '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h7v7M13 3L4 12"/></svg></a>'
+  + '</div></sc-if>';
+
+// Apariencia: idioma de la interfaz, arriba del modo (los nombres de los idiomas no se traducen).
+const LANG_ANCHOR = '<div style="font-size:12px;font-weight:600;margin-bottom:8px">Modo</div>';
+const LANG_ROW = '<div style="font-size:12px;font-weight:600;margin-bottom:8px">Idioma</div>'
+  + '<div style="display:flex;gap:8px;margin-bottom:20px"><sc-for list="{{langOpts}}" as="o"><button class="rz-b s" onClick="{{o.pick}}" aria-pressed="{{o.on}}" lang="{{o.k}}" style="height:32px;padding:0 16px;background:{{o.bg}};color:#111">{{o.l}}</button></sc-for></div>';
+
 // Reglas y ajustes: sin el bloque "Proyecto activo" (la función de proyectos se sacó por ahora).
 const PROJECT_FOOTER = '<div style="margin-top:22px;padding:0 14px;font-size:12px;line-height:1.5;opacity:.75">Proyecto activo<br><b style="font-size:13px;opacity:1">{{rProjName}}</b></div>';
 
@@ -93,6 +102,8 @@ function patchTemplate(name, template) {
   if (template.includes(FICHA_ANCHOR)) list.push([FICHA_ANCHOR, (m) => FICHA_PREVIEW + m]);
   if (template.includes(FICHA_LEFT)) list.push([FICHA_LEFT, (m) => m.replace('box-sizing:border-box">', 'box-sizing:border-box;position:relative">') + GO_BUTTON]);
   if (template.includes(PROJECT_FOOTER)) list.push([PROJECT_FOOTER, () => '']);
+  if (template.includes(CREDITS_ANCHOR)) list.push([CREDITS_ANCHOR, (m) => CREDITS + m]);
+  if (template.includes(LANG_ANCHOR)) list.push([LANG_ANCHOR, (m) => LANG_ROW + m]);
   for (const [find, make] of list) {
     if (!template.includes(find)) {
       console.warn('[Archivero] El diseño cambió: no encontré', find, 'en', name);
@@ -100,6 +111,8 @@ function patchTemplate(name, template) {
     }
     template = template.split(find).join(make(find));
   }
+  if (name === 'Main' && INTRO) template = patchIntroTemplate(template);
+  if (name === 'Main1') template = patchFullscreenTemplate(template);
   return patchSearchTemplate(name, template);
 }
 
@@ -149,9 +162,13 @@ async function fetchPreview(inst, it) {
 
 // ---------- pantallas ----------
 
+// Intro del mosaico (el cajón de intro.js): apagada por ahora.
+const INTRO = false;
+
 export function prepareScreen(screen) {
   patchClass(screen.name, screen.Component);
-  return Object.assign({}, screen, { template: patchTemplate(screen.name, screen.template) });
+  const props = screen.name === 'Main' && !INTRO ? Object.assign({}, screen.props, { intro: 'nunca' }) : screen.props;
+  return Object.assign({}, screen, { props, template: patchTemplate(screen.name, screen.template) });
 }
 
 function patchClass(name, Component) {
@@ -187,6 +204,13 @@ function patchClass(name, Component) {
       this._mc = { key, W: lay.W, H: lay.H, lay, cells: (ci, cj) => (ci === 0 && cj === 0 ? lay.cells : []) };
       return this._mc;
     };
+    // Tocar una pieza abre directamente su ficha completa (antes la elevaba y mostraba un resumen
+    // al costado, con "Ver ficha completa").
+    proto.pick = function (rect, tone, id) {
+      this.lib().selId = id;
+      this.commitNow();
+      this.setState({ edId: id });
+    };
   }
 
   // Tableros: Spotify ocupa una tarjeta horizontal, con la proporción de su reproductor.
@@ -220,6 +244,19 @@ function patchClass(name, Component) {
     };
   }
 
+  // Apariencia: copia en los ajustes compartidos, para que el aviso al guardar (que se dibuja desde el
+  // service worker, sin localStorage) use la misma paleta y tipografía.
+  if (proto.uiSet) {
+    const uiSet = proto.uiSet;
+    proto.uiSet = function (p) {
+      const before = this.ui().lang || 'es';
+      uiSet.call(this, p);
+      settings.save({ ui: this.ui() });
+      // El idioma cambia los textos fijos de la pantalla: main.js la vuelve a montar.
+      if ((this.ui().lang || 'es') !== before) window.dispatchEvent(new Event('archivero:lang'));
+    };
+  }
+
   const renderVals = proto.renderVals;
   proto.renderVals = function () {
     let mc = null;
@@ -236,6 +273,12 @@ function patchClass(name, Component) {
       }
     }
     const vals = renderVals.call(this);
+
+    // Apariencia → Idioma.
+    if (this.ui) {
+      const cur = this.ui().lang || 'es';
+      vals.langOpts = LANGS.map(([k, l]) => ({ k, l, on: cur === k ? 'true' : 'false', bg: cur === k ? '#fff' : 'var(--chip)', pick: () => this.uiSet({ lang: k }) }));
+    }
 
     // Buscador: sin la animación de escritura ni el brillo, y con búsqueda real (search.js).
     if (vals.s) vals.s = { t: 'Buscar…', c: false };
@@ -255,6 +298,7 @@ function patchClass(name, Component) {
 
     if (name === 'Main' && mc && vals.tiles) {
       vals.tiles.forEach((t, i) => {
+        t.delay = (parseFloat(t.delay) * 2).toFixed(2) + 's';
         const c = mc.lay.cells[i];
         if (c && c.it.kind === 'text') t.tfs = fitText(c.it.text, t.w - 32, t.h - 28, 1.5);
         const pv = c && previewOf(this, c.it);
@@ -262,21 +306,11 @@ function patchClass(name, Component) {
         if (pv.img) {
           t.bg = 'url("' + pv.img + '") center/cover no-repeat';
           t.isLink = false;
-          // El diseño eleva la pieza con el fondo que tenía antes de la vista previa (gris).
-          const pick = t.pick, bg = t.bg;
-          t.pick = () => { pick(); this.setState({ selTone: bg }); };
         }
         else if (pv.cardFrame) { t.pvFrame = pv.cardFrame; t.pvStyle = pv.spotify ? spotifyFill(t.w) : FRAME_FILL; t.isLink = false; }
       });
-      // Contenido de la pieza elevada (selBoard es el id de la pieza elegida).
-      const sit = this.state.sel && this.lib().items.find((x) => x.id === this.state.selBoard);
-      const rr = this.state.rect;
-      const spv = sit && previewOf(this, sit);
-      vals.selFrame = spv && !spv.img ? spv.cardFrame : '';
-      vals.selFrameStyle = vals.selFrame && rr ? (spv.spotify ? spotifyFill(rr.w) : FRAME_FILL) : '';
-      vals.selText = sit && sit.kind === 'text' ? sit.text || '' : '';
-      vals.selTfs = vals.selText && rr ? fitText(sit.text, rr.w - 32, rr.h - 28, 1.5) : 15;
     }
+    if (name === 'Main' && INTRO) introVals(vals);
 
     if (name === 'Archivo' && vals.cards && this.curBoard) {
       const b = this.curBoard();
@@ -291,20 +325,7 @@ function patchClass(name, Component) {
       });
     }
 
-    if (name === 'Main1' && vals.pieces) {
-      const its = this.order();
-      vals.pieces.forEach((p, i) => {
-        const pv = previewOf(this, its[i]);
-        if (!pv) return;
-        if (pv.frame) {
-          p.pvFrame = pv.frame;
-          p.pvStyle = pv.site === 'spotify'
-            ? 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,88%);height:352px'
-            : 'position:absolute;left:6%;top:260px;width:88%;height:calc(100% - 520px)';
-        }
-        else Object.assign(p, { src: pv.img, fgImg: true, blur: true, blurImg: true, fgStyle: 'position:absolute;left:6%;top:260px;width:88%;height:calc(100% - 520px);object-fit:contain', fitTag: '' });
-      });
-    }
+    if (name === 'Main1') fullscreenVals(this, vals, previewOf);
 
     if (name === 'Anotador') {
       // El escenario de 1440×900 se escala para entrar en la ventana. (stageFit del diseño no
@@ -362,6 +383,11 @@ function patchClass(name, Component) {
     }
     // Proyectos: fuera de la barra lateral y de los tipos de condición.
     if (vals.rTabs) vals.rTabs = vals.rTabs.filter((t) => t.label !== 'Proyectos');
+    if (vals.rTabs && vals.rt) {
+      const on = this.state.rtab === 'creditos';
+      vals.rt.creditos = on;
+      vals.rTabs.push({ label: 'Manifesto', bg: on ? 'rgba(255,255,255,.16)' : 'transparent', pick: () => this.setState({ rtab: 'creditos', rmsg: '' }) });
+    }
     if (vals.ed && vals.ed.conds) vals.ed.conds.forEach((c) => { c.kinds = c.kinds.filter((k) => k.v !== 'proj'); });
     // "Volver a aplicar" de verdad, sobre lo que está en Sin clasificar.
     vals.reapply = () => this.setState({ rmsg: reapply(this) });

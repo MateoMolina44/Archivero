@@ -4,6 +4,7 @@ import { applyRules } from './core/rules.js';
 import { uid, siteTags } from './core/util.js';
 import { embedOf } from './core/embeds.js';
 import { previewMeta, fetchBlob } from './core/pagemeta.js';
+import { translate } from './core/i18n.js';
 
 const MENUS = [
   { id: 'save-image', title: 'Guardar imagen en Archivero', contexts: ['image'] },
@@ -17,10 +18,23 @@ const MENUS = [
 // se aplican acá antes de guardarlas.
 const pending = new Map();
 
-chrome.runtime.onInstalled.addListener(() => {
+// Idioma elegido en Apariencia (la librería lo copia en los ajustes compartidos).
+const langOf = (s) => (s && s.ui && s.ui.lang) || 'es';
+
+chrome.runtime.onInstalled.addListener(async () => {
+  const lang = langOf(await settings.load());
   chrome.contextMenus.removeAll(() => {
-    for (const m of MENUS) chrome.contextMenus.create(m);
+    for (const m of MENUS) chrome.contextMenus.create(Object.assign({}, m, { title: translate(m.title, lang) }));
   });
+});
+
+// Al cambiar el idioma, el menú del clic derecho también cambia.
+let menuLang = null;
+settings.onChange((s) => {
+  const lang = langOf(s);
+  if (lang === menuLang) return;
+  menuLang = lang;
+  for (const m of MENUS) chrome.contextMenus.update(m.id, { title: translate(m.title, lang) }, () => void chrome.runtime.lastError);
 });
 
 chrome.contextMenus.onClicked.addListener((info, tab) => {
@@ -259,7 +273,12 @@ async function handleSave(kind, info, tab) {
 // ---------- aviso en la página (Extension.dc.html) ----------
 async function showToast(tabId, item, s) {
   const boards = s.boards.filter((b) => b !== 'Sin clasificar').concat('Sin clasificar');
-  const payload = { id: item.id, board: item.to || 'Sin clasificar', tags: item.tags, boards };
+  // Textos del aviso en el idioma elegido (la función que se inyecta no puede importar nada).
+  const lang = langOf(s);
+  const L = { en: { es: 'en', en: 'to', pt: 'em' }[lang] };
+  for (const k of ['Guardado', 'Cambiar', 'Cerrar', 'Tablero', '+ Nuevo tablero…', 'Nombre del tablero nuevo', 'Crear', 'Todavía no tenés tableros: creá uno para guardar acá.', 'Etiquetas (separadas por coma)', 'Etiquetas']) L[k] = translate(k, lang);
+  for (const b of boards) L[b] = translate(b, lang);
+  const payload = { id: item.id, board: item.to || 'Sin clasificar', tags: item.tags, boards, ui: s.ui || {}, L };
   try {
     await chrome.scripting.executeScript({ target: { tabId }, func: injectToast, args: [payload] });
   } catch {
@@ -269,7 +288,16 @@ async function showToast(tabId, item, s) {
 
 // Se ejecuta DENTRO de la página: debe ser autocontenida (sin imports ni variables de afuera).
 function injectToast(p) {
-  const SHOW_MS = 5000;
+  const SHOW_MS = 2000;
+  const T = (k) => (p.L && p.L[k]) || k;
+  // Colores y tipografía de Apariencia (la librería copia su elección en los ajustes compartidos).
+  // Mismos tonos que el popup (public/popup-theme.js): panel = pastilla, campos, botón claro y borde.
+  const u = p.ui || {};
+  const P = { grafito: [0, 0], pizarra: [215, 14], oceano: [205, 38], turquesa: [178, 30], bosque: [145, 22], musgo: [80, 20], arena: [38, 24], ambar: [30, 46], terracota: [14, 40], vino: [345, 32], rosa: [325, 30], lavanda: [262, 24] }[u.pal || 'grafito'] || [0, 0];
+  const L = u.mode === 'dark' ? { panel: 30, field: 19, chip: 84 } : { panel: 34, field: 27, chip: 85 };
+  const hsl = (l) => 'hsl(' + P[0] + ' ' + P[1] + '% ' + l + '%)';
+  const FONTS = { 'Inter': "'Inter',system-ui,sans-serif", 'Manrope': "'Manrope',system-ui,sans-serif", 'Space Grotesk': "'Space Grotesk',system-ui,sans-serif", 'Fraunces': "'Fraunces',Georgia,serif", 'JetBrains Mono': "'JetBrains Mono',ui-monospace,monospace" };
+  const font = FONTS[u.f2] || FONTS.Inter;
   document.getElementById('archivero-toast-host')?.remove();
   const host = document.createElement('div');
   host.id = 'archivero-toast-host';
@@ -277,7 +305,7 @@ function injectToast(p) {
   const root = host.attachShadow({ mode: 'closed' });
   const css = `
     *{box-sizing:border-box}
-    .t{font:13px/1.35 Inter,system-ui,sans-serif;background:#575757;color:#fff;border-radius:30px;width:440px;max-width:calc(100vw - 32px);
+    .t{font:13px/1.35 ${font};background:${hsl(L.panel)};color:#fff;border-radius:30px;width:440px;max-width:calc(100vw - 32px);
        padding:10px 12px 10px 20px;border:1px solid rgba(255,255,255,.12);box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 1.5px rgba(255,255,255,.12);
        animation:in .35s cubic-bezier(.19,1,.22,1) both}
     .t.open{border-radius:18px;padding:14px 16px 16px 20px}
@@ -286,7 +314,7 @@ function injectToast(p) {
     @keyframes out{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(18px) scale(.98)}}
     .r{display:flex;align-items:center;gap:12px}
     .msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .ch{background:#d9d9d9;color:#111;border:0;border-radius:20px;padding:6px 14px;font:600 12px Inter,system-ui,sans-serif;cursor:pointer;flex:none;transition:transform .15s,background-color .15s}
+    .ch{background:${hsl(L.chip)};color:#111;border:0;border-radius:20px;padding:6px 14px;font:600 12px ${font};cursor:pointer;flex:none;transition:transform .15s,background-color .15s}
     .ch:hover{background:#fff;transform:scale(1.04)}
     .x{background:none;border:0;color:#fff;opacity:.7;font-size:16px;cursor:pointer;padding:0 4px;line-height:1}
     .x:hover{opacity:1}
@@ -296,19 +324,19 @@ function injectToast(p) {
     .nb{display:none;gap:8px}
     .nb.on{display:flex}
     label{font-size:11px;font-weight:600;opacity:.85}
-    select,input{width:100%;height:34px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:#464646;color:#fff;font:13px Inter,system-ui,sans-serif;padding:0 14px;outline:none}
+    select,input{width:100%;height:34px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:${hsl(L.field)};color:#fff;font:13px ${font};padding:0 14px;outline:none}
     select:focus,input:focus{border-color:#fff}
     select option{color:#111}
     .hint{font-size:11px;opacity:.8}
   `;
   root.innerHTML = `<style>${css}</style>
     <div class="t" role="status">
-      <div class="r"><span class="msg"></span><button class="ch">Cambiar</button><button class="x" aria-label="Cerrar">×</button></div>
+      <div class="r"><span class="msg"></span><button class="ch">${T('Cambiar')}</button><button class="x" aria-label="${T('Cerrar')}">×</button></div>
       <div class="f">
-        <label>Tablero</label><select aria-label="Tablero"></select>
-        <div class="nb"><input class="nbi" type="text" maxlength="40" placeholder="Nombre del tablero nuevo" aria-label="Nombre del tablero nuevo" /><button class="ch nbo">Crear</button></div>
-        <div class="hint" hidden>Todavía no tenés tableros: creá uno para guardar acá.</div>
-        <label>Etiquetas (separadas por coma)</label><input class="tg" type="text" aria-label="Etiquetas" />
+        <label>${T('Tablero')}</label><select aria-label="${T('Tablero')}"></select>
+        <div class="nb"><input class="nbi" type="text" maxlength="40" placeholder="${T('Nombre del tablero nuevo')}" aria-label="${T('Nombre del tablero nuevo')}" /><button class="ch nbo">${T('Crear')}</button></div>
+        <div class="hint" hidden>${T('Todavía no tenés tableros: creá uno para guardar acá.')}</div>
+        <label>${T('Etiquetas (separadas por coma)')}</label><input class="tg" type="text" aria-label="${T('Etiquetas')}" />
       </div>
     </div>`;
   const $ = (s) => root.querySelector(s);
@@ -321,13 +349,13 @@ function injectToast(p) {
   const state = { board: p.board, tags: p.tags, boards: p.boards.slice() };
   const render = () => {
     const tags = state.tags.split(',').map((t) => t.trim()).filter(Boolean).map((t) => '#' + t).join(' ');
-    msg.innerHTML = '<b>Guardado</b> en ';
-    msg.append(state.board + (tags ? ' · ' + tags : ''));
+    msg.innerHTML = '<b>' + T('Guardado') + '</b> ' + T('en') + ' ';
+    msg.append(T(state.board) + (tags ? ' · ' + tags : ''));
   };
   const fillBoards = () => {
     select.replaceChildren();
-    for (const b of state.boards) select.appendChild(new Option(b, b, false, b === state.board));
-    select.appendChild(new Option('+ Nuevo tablero…', '__new'));
+    for (const b of state.boards) select.appendChild(new Option(T(b), b, false, b === state.board));
+    select.appendChild(new Option(T('+ Nuevo tablero…'), '__new'));
     const none = state.boards.every((b) => b === 'Sin clasificar');
     $('.hint').hidden = !none;
     if (none) newRow.classList.add('on');
@@ -336,7 +364,7 @@ function injectToast(p) {
   tagsIn.value = p.tags;
   render();
 
-  // Se va a los 5 s. Pasar el mouse lo pausa; cada cambio vuelve a contar 5 s.
+  // Se va a los 2 s. Pasar el mouse lo pausa; cada cambio vuelve a contar 2 s.
   let timer;
   let hovering = false;
   const close = () => { clearTimeout(timer); box.classList.add('out'); setTimeout(() => host.remove(), 300); };

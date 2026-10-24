@@ -1,11 +1,18 @@
 import * as settings from './core/settings.js';
 // Las 5 tipografías de Apariencia, por si el usuario eligió otra que no sea Inter.
 import './library/fonts.js';
+import { translate, translateDom, uiLang } from './core/i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const board = $('board');
 const status = $('status');
 const UNSORTED = 'Sin clasificar';
+
+// Mismo idioma que la librería (Apariencia → Idioma).
+const LANG = uiLang();
+const t = (s) => translate(s, LANG);
+document.documentElement.lang = LANG;
+translateDom(document.body, LANG);
 
 // Como panel flotante (popup.html?frame, ver togglePanel en background.js) el popup vive en un
 // iframe dentro de la página: avisa su alto y pide cerrarse o guardar con mensajes a la página.
@@ -20,9 +27,9 @@ if (FRAME) {
 async function render() {
   const s = await settings.load();
   const boards = s.boards.filter((b) => b !== UNSORTED);
-  board.replaceChildren(new Option('Automático (según tus reglas)', ''));
+  board.replaceChildren(new Option(t('Automático (según tus reglas)'), ''));
   boards.forEach((b) => board.appendChild(new Option(b, b, false, b === s.dest)));
-  board.appendChild(new Option(UNSORTED, UNSORTED, false, s.dest === UNSORTED));
+  board.appendChild(new Option(t(UNSORTED), UNSORTED, false, s.dest === UNSORTED));
   if (s.dest && !boards.includes(s.dest) && s.dest !== UNSORTED) board.appendChild(new Option(s.dest, s.dest, false, true));
   $('board-hint').hidden = boards.length > 0;
 }
@@ -53,9 +60,9 @@ inlineCreate($('new-board'), $('board-row'), $('board-name'), $('board-ok'), asy
 $('save-page').addEventListener('click', async () => {
   // La página guarda después de cerrar el panel; el aviso al guardar confirma.
   if (FRAME) return tell({ archivero: 'save' });
-  status.textContent = 'Guardando…';
+  status.textContent = t('Guardando…');
   const res = await chrome.runtime.sendMessage({ type: 'save-current-page' });
-  status.textContent = res?.ok ? 'Página guardada' : 'No se pudo guardar: ' + (res?.error || 'error');
+  status.textContent = res?.ok ? t('Página guardada') : t('No se pudo guardar:') + ' ' + (res?.error || 'error');
   if (res?.ok) setTimeout(close, 700);
 });
 
