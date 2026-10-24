@@ -7,6 +7,7 @@ import * as settings from '../core/settings.js';
 import { applyRules, mergeTags } from '../core/rules.js';
 import { embedOf } from '../core/embeds.js';
 import { mosaicBox, packMosaic, clampPan } from './mosaic.js';
+import { previewMeta, fetchBlob } from '../core/pagemeta.js';
 
 const UNSORTED = 'Sin clasificar';
 
@@ -26,11 +27,10 @@ const TILE_FRAME = '<sc-if value="{{t.pvFrame}}"><iframe src="{{t.pvFrame}}" tit
 const FICHA_PREVIEW = '<sc-if value="{{pe.pvOn}}"><div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px">'
   + '<sc-if value="{{pe.pvFrame}}"><iframe src="{{pe.pvFrame}}" title="{{pe.title}}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write" allowfullscreen style="{{pe.pvStyle}};border:0;border-radius:10px;background:#000"></iframe></sc-if>'
   + '<sc-if value="{{pe.pvImg}}"><img src="{{pe.pvImg}}" alt="{{pe.title}}" style="flex:1;min-height:0;max-width:100%;object-fit:contain;border-radius:6px"></sc-if>'
-  + '<a class="ob" href="{{pe.href}}" target="_blank" rel="noopener" style="display:inline-flex;text-decoration:none;flex:none">Abrir sitio</a>'
   + '</div></sc-if>';
 
 // Pantalla completa (vista 1): reproductor en el lugar de la imagen.
-const FULL_FRAME = '<sc-if value="{{p.pvFrame}}"><iframe src="{{p.pvFrame}}" title="{{p.name}}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write" allowfullscreen style="position:absolute;left:6%;top:260px;width:88%;height:calc(100% - 520px);border:0;border-radius:10px;background:#000"></iframe></sc-if>';
+const FULL_FRAME = '<sc-if value="{{p.pvFrame}}"><iframe src="{{p.pvFrame}}" title="{{p.name}}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen; clipboard-write" allowfullscreen style="{{p.pvStyle}};border:0;border-radius:10px;background:#000"></iframe></sc-if>';
 
 const TEMPLATE_PATCHES = {
   Archivo: [
@@ -43,9 +43,19 @@ const TEMPLATE_PATCHES = {
 };
 const FICHA_ANCHOR = '<sc-if value="{{pe.isLink}}" hint-placeholder-val="{{false}}">';
 
+// Ficha completa: botón para ir al sitio de donde viene la referencia, arriba a la izquierda.
+const FICHA_LEFT = '<div style="flex:1;min-width:0;background:var(--field);display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box">';
+const GO_BUTTON = '<sc-if value="{{pe.goOn}}"><a class="ob" href="{{pe.goHref}}" target="_blank" rel="noopener" title="{{pe.goHref}}" style="position:absolute;left:16px;top:16px;z-index:2;display:inline-flex;align-items:center;gap:6px;text-decoration:none">Ir al sitio'
+  + '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h7v7M13 3L4 12"/></svg></a></sc-if>';
+
+// Reglas y ajustes: sin el bloque "Proyecto activo" (la función de proyectos se sacó por ahora).
+const PROJECT_FOOTER = '<div style="margin-top:22px;padding:0 14px;font-size:12px;line-height:1.5;opacity:.75">Proyecto activo<br><b style="font-size:13px;opacity:1">{{rProjName}}</b></div>';
+
 function patchTemplate(name, template) {
   const list = (TEMPLATE_PATCHES[name] || []).slice();
   if (template.includes(FICHA_ANCHOR)) list.push([FICHA_ANCHOR, (m) => FICHA_PREVIEW + m]);
+  if (template.includes(FICHA_LEFT)) list.push([FICHA_LEFT, (m) => m.replace('box-sizing:border-box">', 'box-sizing:border-box;position:relative">') + GO_BUTTON]);
+  if (template.includes(PROJECT_FOOTER)) list.push([PROJECT_FOOTER, () => '']);
   for (const [find, make] of list) {
     if (!template.includes(find)) {
       console.warn('[Archivero] El diseño cambió: no encontré', find, 'en', name);
@@ -58,17 +68,44 @@ function patchTemplate(name, template) {
 
 // ---------- vistas previas de enlaces ----------
 
-// Estilo del reproductor en la ficha: los videos en 16:9, el resto (Spotify, X, TikTok) a todo el alto.
-const frameStyle = (pv) => (pv.video ? 'width:100%;aspect-ratio:16/9;max-height:calc(100% - 50px);flex:none' : 'flex:1;width:100%;min-height:0');
+// Estilo del reproductor en la ficha: videos en 16:9, Spotify en su alto fijo (352 px, el único
+// tamaño que muestra bien) y el resto (X, TikTok) a todo el alto.
+const frameStyle = (pv) => (pv.site === 'spotify' ? 'width:100%;max-width:760px;height:352px;flex:none'
+  : pv.video ? 'width:100%;aspect-ratio:16/9;max-height:100%;flex:none'
+  : 'flex:1;width:100%;min-height:0');
 
+// Vista previa de un enlace. Las tarjetas y el mosaico usan una imagen fija (portada o imagen de la
+// página); el reproductor real queda para la ficha. Si todavía no hay imagen, se busca en segundo plano.
 function previewOf(inst, it) {
   if (!it || it.kind !== 'link') return null;
   const e = embedOf(it.url);
   const saved = it.pv ? inst.srcOf({ id: 'prev:' + it.id }) : '';
-  if (e && e.thumb) return { img: e.thumb, frame: e.frame, cardFrame: '', play: true, video: true };
-  if (e) return { img: '', frame: e.frame, cardFrame: e.frame, play: false, video: e.site === 'vimeo' };
-  if (saved) return { img: saved, frame: '', cardFrame: '', play: false };
-  return null;
+  if (!it.pv && !(e && e.thumb)) fetchPreview(inst, it);
+  if (e) {
+    const img = e.thumb || saved;
+    const video = e.site === 'youtube' || e.site === 'vimeo';
+    return { img, frame: e.frame, cardFrame: img ? '' : e.frame, play: !!img && (video || e.site === 'spotify'), video, site: e.site };
+  }
+  return saved ? { img: saved, frame: '', cardFrame: '', play: false } : null;
+}
+
+// Busca la imagen de vista previa de un enlace (una vez por pieza) y la guarda en los medios.
+const fetching = new Set();
+async function fetchPreview(inst, it) {
+  if (it.pvTry || fetching.has(it.id) || !/^https?:\/\//.test(it.url || '')) return;
+  fetching.add(it.id);
+  try {
+    const m = await previewMeta(it.url);
+    const blob = m.image ? await fetchBlob(m.image, 'image/', 8) : null;
+    if (inst._dead) return;
+    if (blob) { inst.mediaPut('prev:' + it.id, blob); it.pv = true; }
+    it.pvTry = true;
+    inst.commit();
+  } catch {
+    /* sin vista previa: queda la tarjeta gris */
+  } finally {
+    fetching.delete(it.id);
+  }
 }
 
 // ---------- pantallas ----------
@@ -134,6 +171,12 @@ function patchClass(name, Component) {
     // Buscador: sin la animación de escritura ni el brillo.
     if (vals.s) vals.s = { t: 'Buscar…', c: false };
 
+    // Ficha completa: botón "Ir al sitio" cuando la pieza tiene la dirección de origen.
+    if (vals.pe) { vals.pe.goHref = vals.pe.url || ''; vals.pe.goOn = /^https?:\/\//.test(vals.pe.goHref); }
+
+    // Agregar pieza: la pestaña elegida en blanco con texto oscuro; las otras con texto blanco.
+    if (vals.add && vals.add.tabs) vals.add.tabs.forEach((t) => { if (String(t.on) !== 'true') t.bg = 'transparent;color:#fff;border:1px solid rgba(255,255,255,.3)'; });
+
     // Archivo arma su ficha acá y no en fichaVals().
     if (vals.edOn && vals.pe && !vals.pe.pvOn && this.state.edId) {
       const pv = previewOf(this, this.lib().items.find((x) => x.id === this.state.edId));
@@ -165,7 +208,12 @@ function patchClass(name, Component) {
       vals.pieces.forEach((p, i) => {
         const pv = previewOf(this, its[i]);
         if (!pv) return;
-        if (pv.frame) p.pvFrame = pv.frame;
+        if (pv.frame) {
+          p.pvFrame = pv.frame;
+          p.pvStyle = pv.site === 'spotify'
+            ? 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(760px,88%);height:352px'
+            : 'position:absolute;left:6%;top:260px;width:88%;height:calc(100% - 520px)';
+        }
         else Object.assign(p, { src: pv.img, fgImg: true, blur: true, blurImg: true, fgStyle: 'position:absolute;left:6%;top:260px;width:88%;height:calc(100% - 520px);object-fit:contain', fitTag: '' });
       });
     }
@@ -210,6 +258,9 @@ function patchClass(name, Component) {
       this._rsaved = snap;
       settings.save({ rules: this.rules, rseq: this.rseq, projs: this.rprojs, prefs: this.rprefs, proj: this.state.rproj || 0 });
     }
+    // Proyectos: fuera de la barra lateral y de los tipos de condición.
+    if (vals.rTabs) vals.rTabs = vals.rTabs.filter((t) => t.label !== 'Proyectos');
+    if (vals.ed && vals.ed.conds) vals.ed.conds.forEach((c) => { c.kinds = c.kinds.filter((k) => k.v !== 'proj'); });
     // "Volver a aplicar" de verdad, sobre lo que está en Sin clasificar.
     vals.reapply = () => this.setState({ rmsg: reapply(this) });
     // El diseño suma "Sin clasificar" como tablero virtual; acá ya existe como tablero real.

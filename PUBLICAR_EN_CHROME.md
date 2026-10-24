@@ -22,7 +22,7 @@ Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de
 - **Categoría:** Herramientas (Productividad › Herramientas).
 - **Descripción** (para pegar):
 
-  > Archivero es tu librería personal de inspiraciones. Guardá imágenes, videos, enlaces y textos de cualquier página con clic derecho o con Alt+Shift+S, y se ordenan solos en tableros según tus reglas (por sitio, palabras clave, tipo de contenido o proyecto activo).
+  > Archivero es tu librería personal de inspiraciones. Guardá imágenes, videos, enlaces y textos de cualquier página con clic derecho o con Alt+Shift+S, y se ordenan solos en tableros según tus reglas (por sitio, palabras clave o tipo de contenido).
   >
   > • Tableros con filas justificadas tipo galería, ficha editable para cada pieza y etiquetas automáticas según el sitio.
   > • Mosaico infinito para recorrer todo lo guardado y vista de pantalla completa.
@@ -30,7 +30,7 @@ Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de
   > • Temas claros y oscuros con 12 paletas y 5 tipografías.
   > • Todo queda en tu navegador: sin cuentas, sin servidores, sin publicidad. Exportá una copia cuando quieras.
 
-- **Ícono de la tienda:** 128×128 → `extension/public/icons/icon128.png`.
+- **Ícono de la tienda:** 128×128 → `extension/public/icons/archivero-128.png`.
 - **Capturas:** al menos 1, ideal 3–5, de **1280×800** (o 640×400), PNG o JPG. Sugeridas: tablero con piezas, mosaico principal, Reglas y ajustes, popup + aviso. Si querés te las saco yo desde el navegador con datos de ejemplo.
 - **Mosaico promocional pequeño (opcional):** 440×280.
 
@@ -42,7 +42,7 @@ Archivo a subir: `archivero-extension.zip` (se arma comprimiendo el contenido de
   - `contextMenus`: agrega las opciones "Guardar … en Archivero" al menú de clic derecho.
   - `activeTab`: guarda la página actual cuando el usuario usa el atajo Alt+Shift+S o el botón del popup.
   - `scripting`: lee el título y la descripción de la página que se guarda y muestra en ella el aviso para corregir tablero y etiquetas.
-  - `storage`: guarda reglas, proyectos y preferencias, compartidos entre el popup, el aviso y la librería.
+  - `storage`: guarda reglas, tableros y preferencias, compartidos entre el popup, el aviso y la librería.
   - `unlimitedStorage`: las imágenes y videos guardados se almacenan localmente en IndexedDB y pueden superar el límite estándar.
   - Permiso de host `<all_urls>`: el usuario puede guardar contenido de cualquier sitio; hace falta para descargar la imagen o el video elegido y mostrar el aviso en esa página. Solo actúa cuando el usuario guarda algo.
 

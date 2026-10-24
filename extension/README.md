@@ -20,10 +20,10 @@ Todo es local (localStorage + IndexedDB): nada sale de tu navegador. Copia con E
 - `src/dc/runtime.js`: runtime de las plantillas del diseño (`{{…}}`, `<sc-for>`, `<sc-if>`), sin `eval` para cumplir la CSP de MV3.
 - `src/library/main.js`: una sola página que cambia de pantalla sin recargar (rutas `#/Main`, `#/Main1`, `#/Archivo`, `#/Tablero`, `#/Ajustes`, `#/Anotador`).
 - `src/library/patches.js`: lo que cambia respecto del prototipo, aplicado sobre las clases importadas:
-  medios en la IndexedDB compartida, reglas/proyectos/preferencias persistentes y "Reaplicar a Sin clasificar" real.
+  medios en la IndexedDB compartida, reglas y preferencias persistentes y "Reaplicar a Sin clasificar" real.
 - `src/library/ingest.js`: incorpora lo que guarda la extensión (bandeja `inbox` de IndexedDB) a la librería.
 - `src/background.js`: menús, atajo, reglas y aviso. `src/popup.*`: popup según `Extension.dc.html`.
-- `src/core/settings.js`: reglas, proyectos y preferencias en `chrome.storage.local` (compartido por todo).
+- `src/core/settings.js`: reglas, tablero elegido y preferencias en `chrome.storage.local` (compartido por todo).
 
 ## Probar la librería sin instalar la extensión
 `npm run preview` y abrir `http://localhost:5173/library.html`. Fuera de la extensión los ajustes usan localStorage.

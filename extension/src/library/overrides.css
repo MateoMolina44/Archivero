@@ -3,8 +3,10 @@
 /* Buscador: texto fijo, sin brillo animado. */
 .shm { animation: none !important; background: none !important; color: #ececec !important; -webkit-text-fill-color: #ececec !important; }
 
-/* Anotador: su pantalla es un escenario de 1440×900 escalado; el velo de Reglas y ajustes y el de
-   los diálogos tienen que cubrir toda la ventana, no solo el escenario. */
+/* Anotador: la pantalla es un escenario de 1440×900 escalado que recorta lo que se sale
+   (overflow:hidden). Mientras están abiertos Reglas y ajustes o un diálogo, deja de recortar y el
+   velo se estira a toda la ventana (la raíz de la pantalla igual recorta en el borde de la ventana). */
+#app[data-screen="Anotador"] .mos:has(.rz, .mdl) { overflow: visible !important; }
 #app[data-screen="Anotador"] .rz .rz-v,
 #app[data-screen="Anotador"] .mdl {
   inset: auto !important;

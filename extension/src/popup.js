@@ -2,17 +2,12 @@ import * as settings from './core/settings.js';
 import './popup-fonts.js';
 
 const $ = (id) => document.getElementById(id);
-const project = $('project');
 const board = $('board');
 const status = $('status');
 const UNSORTED = 'Sin clasificar';
 
 async function render() {
   const s = await settings.load();
-  project.replaceChildren();
-  if (!s.projs.length) project.appendChild(new Option('Sin proyectos', ''));
-  s.projs.forEach((p, i) => project.appendChild(new Option(p, String(i), false, i === s.proj)));
-
   const boards = s.boards.filter((b) => b !== UNSORTED);
   board.replaceChildren(new Option('Automático (según tus reglas)', ''));
   boards.forEach((b) => board.appendChild(new Option(b, b, false, b === s.dest)));
@@ -21,9 +16,6 @@ async function render() {
   $('board-hint').hidden = boards.length > 0;
 }
 
-project.addEventListener('change', () => {
-  if (project.value !== '') settings.save({ proj: Number(project.value) });
-});
 board.addEventListener('change', () => settings.save({ dest: board.value }));
 
 // (window.prompt no funciona en popups de extensión, por eso inputs propios)
@@ -40,12 +32,6 @@ function inlineCreate(button, row, input, ok, create) {
   ok.addEventListener('click', go);
   input.addEventListener('keydown', (e) => e.key === 'Enter' && go());
 }
-
-inlineCreate($('new-project'), $('new-row'), $('new-name'), $('new-ok'), async (name) => {
-  const s = settings.get();
-  const projs = s.projs.includes(name) ? s.projs : s.projs.concat(name);
-  await settings.save({ projs, proj: projs.indexOf(name) });
-});
 
 inlineCreate($('new-board'), $('board-row'), $('board-name'), $('board-ok'), async (name) => {
   await chrome.runtime.sendMessage({ type: 'create-board', name });

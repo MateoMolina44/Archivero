@@ -3,6 +3,7 @@ import * as settings from './core/settings.js';
 import { applyRules } from './core/rules.js';
 import { uid, siteTags } from './core/util.js';
 import { embedOf } from './core/embeds.js';
+import { previewMeta, fetchBlob } from './core/pagemeta.js';
 
 const MENUS = [
   { id: 'save-image', title: 'Guardar imagen en Archivero', contexts: ['image'] },
@@ -11,6 +12,10 @@ const MENUS = [
   { id: 'save-selection', title: 'Guardar texto seleccionado en Archivero', contexts: ['selection'] },
   { id: 'save-page', title: 'Guardar esta página en Archivero', contexts: ['page'] },
 ];
+
+// Piezas que ya mostraron el aviso pero todavía se están descargando: las correcciones del aviso
+// se aplican acá antes de guardarlas.
+const pending = new Map();
 
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
@@ -37,8 +42,14 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       return sendResponse({ ok: true });
     }
     if (msg?.type === 'patch-item') {
-      // Corrección desde el aviso: la librería la aplica al incorporar la bandeja.
-      await inboxAdd({ op: 'patch', id: msg.id, patch: msg.patch });
+      const item = pending.get(msg.id);
+      if (item) {
+        if ('board' in msg.patch) item.to = msg.patch.board;
+        if ('tags' in msg.patch) item.tags = msg.patch.tags;
+      } else {
+        // Ya está guardada: la librería aplica la corrección al incorporar la bandeja.
+        await inboxAdd({ op: 'patch', id: msg.id, patch: msg.patch });
+      }
       return sendResponse({ ok: true });
     }
     if (msg?.type === 'create-board') {
@@ -68,7 +79,7 @@ async function flashBadge(text, color, err) {
   setTimeout(() => chrome.action.setBadgeText({ text: '' }), 2500);
 }
 
-// ---------- lectura de la página ----------
+// ---------- lectura de la página abierta ----------
 async function readPageMeta(tabId) {
   try {
     const [res] = await chrome.scripting.executeScript({
@@ -89,45 +100,6 @@ async function readPageMeta(tabId) {
   }
 }
 
-// Metadatos de una página que no está abierta (enlace guardado con clic derecho).
-async function fetchPageMeta(url) {
-  if (!/^https?:/.test(url || '')) return {};
-  const ctl = new AbortController();
-  const timer = setTimeout(() => ctl.abort(), 6000);
-  try {
-    const r = await fetch(url, { signal: ctl.signal });
-    if (!r.ok || !/html/.test(r.headers.get('content-type') || '')) return {};
-    const html = (await r.text()).slice(0, 400000);
-    const meta = (n) => {
-      const re = new RegExp(`<meta[^>]+(?:property|name)=["']${n}["'][^>]*>`, 'i');
-      const tag = html.match(re)?.[0] || '';
-      return (tag.match(/content=["']([^"']*)["']/i)?.[1] || '').replace(/&amp;/g, '&');
-    };
-    const img = meta('og:image') || meta('twitter:image');
-    return {
-      title: meta('og:title') || (html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] || '').trim(),
-      image: img ? new URL(img, r.url).href : '',
-    };
-  } catch {
-    return {};
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
-async function fetchMedia(url, prefix, maxMB) {
-  if (!/^(https?:|data:)/.test(url || '')) return null;
-  try {
-    const r = await fetch(url);
-    if (!r.ok) return null;
-    const blob = await r.blob();
-    if (!blob.type.startsWith(prefix) || blob.size > maxMB * 1024 * 1024) return null;
-    return blob;
-  } catch {
-    return null;
-  }
-}
-
 async function captureTab(tab) {
   try {
     const dataUrl = await chrome.tabs.captureVisibleTab(tab?.windowId, { format: 'jpeg', quality: 75 });
@@ -137,34 +109,29 @@ async function captureTab(tab) {
   }
 }
 
-// ---------- armado de la pieza (formato del diseño) ----------
+// ---------- guardado ----------
+// 1) Se arma la pieza con lo que ya se sabe y se muestra el aviso enseguida.
+// 2) Después se descargan la imagen o el video y la vista previa, y se guarda.
 async function handleSave(kind, info, tab) {
   const page = info.pageUrl || tab?.url || '';
   const pageTitle = tab?.title || '';
   let item;
-  let blob = null;
-  let preview = null; // imagen de vista previa para enlaces
+  let capture = null; // captura de la pestaña, se saca antes de que aparezca el aviso
+  let meta = {};
 
   if (kind === 'save-image') {
-    blob = await fetchMedia(info.srcUrl, 'image/', 25);
     item = { kind: 'img', url: page, title: pageTitle };
   } else if (kind === 'save-video') {
-    blob = await fetchMedia(info.srcUrl, 'video/', 60);
-    item = blob ? { kind: 'video', url: page, title: pageTitle } : { kind: 'link', url: page, title: pageTitle };
-    if (!blob && !embedOf(page)) preview = await captureTab(tab);
+    item = { kind: 'video', url: page, title: pageTitle };
+    if (!embedOf(page)) capture = await captureTab(tab);
   } else if (kind === 'save-link') {
     item = { kind: 'link', url: info.linkUrl, title: info.linkText || '' };
-    if (!embedOf(info.linkUrl)) {
-      const meta = await fetchPageMeta(info.linkUrl);
-      if (!item.title) item.title = meta.title || '';
-      if (meta.image) preview = await fetchMedia(meta.image, 'image/', 8);
-    }
   } else if (kind === 'save-selection') {
     item = { kind: 'text', url: page, text: info.selectionText || '', title: '' };
   } else {
-    const meta = tab?.id ? await readPageMeta(tab.id) : {};
+    meta = tab?.id ? await readPageMeta(tab.id) : {};
     item = { kind: 'link', url: page, title: meta.title || pageTitle, note: meta.description || '' };
-    if (!embedOf(page)) preview = (meta.image && (await fetchMedia(meta.image, 'image/', 8))) || (await captureTab(tab));
+    if (!embedOf(page) && !meta.image) capture = await captureTab(tab);
   }
 
   item = Object.assign({ id: uid(), t: Date.now(), page, note: '', tags: '', text: '' }, item);
@@ -181,11 +148,37 @@ async function handleSave(kind, info, tab) {
   if (s.dest) to = s.dest;
   item.to = to;
 
-  if (blob) await mediaPut(item.id, blob);
-  if (preview) { await mediaPut('prev:' + item.id, preview); item.pv = true; }
-  await inboxAdd({ op: 'add', item });
-  await flashBadge('✓', '#575757');
-  if (tab?.id && settings.pref(s, settings.PREF_SHOW_TOAST)) await showToast(tab.id, item, s);
+  pending.set(item.id, item);
+  flashBadge('✓', '#575757');
+  if (tab?.id && settings.pref(s, settings.PREF_SHOW_TOAST)) showToast(tab.id, item, s);
+
+  try {
+    let blob = null;
+    let preview = null;
+    if (kind === 'save-image') {
+      blob = await fetchBlob(info.srcUrl, 'image/', 25);
+    } else if (kind === 'save-video') {
+      blob = await fetchBlob(info.srcUrl, 'video/', 60);
+      if (!blob) { item.kind = 'link'; preview = capture; }
+    } else if (kind === 'save-link') {
+      const m = await previewMeta(info.linkUrl);
+      if (!item.title) item.title = m.title || '';
+      if (m.image) preview = await fetchBlob(m.image, 'image/', 8);
+    } else if (kind === 'save-page') {
+      if (meta.image) preview = await fetchBlob(meta.image, 'image/', 8);
+      else if (!embedOf(page)) {
+        const m = await previewMeta(page);
+        if (m.image) preview = await fetchBlob(m.image, 'image/', 8);
+      }
+      if (!preview) preview = capture;
+    }
+    if (blob) await mediaPut(item.id, blob);
+    if (preview) { await mediaPut('prev:' + item.id, preview); item.pv = true; }
+    item.pvTry = true;
+  } finally {
+    pending.delete(item.id);
+    await inboxAdd({ op: 'add', item });
+  }
 }
 
 // ---------- aviso en la página (Extension.dc.html) ----------
@@ -210,10 +203,11 @@ function injectToast(p) {
   const css = `
     *{box-sizing:border-box}
     .t{font:13px/1.35 Inter,system-ui,sans-serif;background:#575757;color:#fff;border-radius:30px;width:440px;max-width:calc(100vw - 32px);
-       padding:10px 12px 10px 20px;box-shadow:0 6px 20px rgba(0,0,0,.3);animation:in .45s cubic-bezier(.19,1,.22,1) both}
+       padding:10px 12px 10px 20px;border:1px solid rgba(255,255,255,.12);box-shadow:0 6px 20px rgba(0,0,0,.3),inset 0 1px 1.5px rgba(255,255,255,.12);
+       animation:in .35s cubic-bezier(.19,1,.22,1) both}
     .t.open{border-radius:18px;padding:14px 16px 16px 20px}
     .t.out{animation:out .3s cubic-bezier(.4,0,.2,1) both}
-    @keyframes in{0%{opacity:0;transform:translateY(18px) scale(.98)}100%{opacity:1;transform:none}}
+    @keyframes in{0%{opacity:0;transform:translateY(14px) scale(.98)}100%{opacity:1;transform:none}}
     @keyframes out{0%{opacity:1;transform:none}100%{opacity:0;transform:translateY(18px) scale(.98)}}
     .r{display:flex;align-items:center;gap:12px}
     .msg{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

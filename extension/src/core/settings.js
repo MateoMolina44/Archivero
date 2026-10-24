@@ -9,11 +9,11 @@ export const DEFAULTS = {
   rules: [
     { id: 'r1', name: 'Pinterest → Referencias', on: true, match: 'any', conds: [{ k: 'dom', v: 'pinterest.com' }], to: '', tags: 'referencia' },
     { id: 'r2', name: 'Paleta y color', on: true, match: 'any', conds: [{ k: 'kw', v: 'paleta, color, colores' }], to: '', tags: 'paleta' },
-    { id: 'r3', name: 'Lo que guardo en mi proyecto', on: true, match: 'all', conds: [{ k: 'proj', v: 'Interfaz western' }, { k: 'tipo', v: 'imagen' }], to: '', tags: 'interfaz-western' },
     { id: 'r4', name: 'Capturas de pantalla', on: false, match: 'all', conds: [{ k: 'tipo', v: 'captura' }], to: '', tags: 'captura' },
   ],
   rseq: 4,
-  projs: ['Interfaz western', 'Tren de la morgue', 'Estudio Manteca Games'],
+  // Proyectos: la función se sacó por ahora (era confusa); se conservan los campos por compatibilidad.
+  projs: [],
   proj: 0,
   prefs: [
     { label: 'Aplicar reglas al guardar', on: true },
@@ -31,11 +31,19 @@ let cache = null;
 
 const clone = (o) => JSON.parse(JSON.stringify(o));
 
+// Valores guardados + valores por defecto. Las reglas que dependían de "Proyecto activo" se quitan,
+// porque esa condición ya no existe.
+function normalize(raw) {
+  const s = Object.assign(clone(DEFAULTS), raw || {});
+  s.rules = (s.rules || []).filter((r) => !(r.conds || []).some((c) => c.k === 'proj'));
+  return s;
+}
+
 export async function load() {
   let raw = null;
   if (hasChrome) raw = (await chrome.storage.local.get(KEY))[KEY];
   else { try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch { raw = null; } }
-  cache = Object.assign(clone(DEFAULTS), raw || {});
+  cache = normalize(raw);
   return cache;
 }
 
@@ -65,7 +73,7 @@ export function onChange(cb) {
       if (area !== 'local' || !changes[KEY]) return;
       const json = JSON.stringify(changes[KEY].newValue);
       if (ownWrites.delete(json)) return;
-      cache = Object.assign(clone(DEFAULTS), changes[KEY].newValue || {});
+      cache = normalize(changes[KEY].newValue);
       cb(cache);
     });
   } else {
