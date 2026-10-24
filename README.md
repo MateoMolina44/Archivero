@@ -76,3 +76,7 @@ Then follow steps 3–6 above and choose the `extension/dist` folder.
 - `PUBLICAR_EN_CHROME.md`: guide to publish the extension on the Chrome Web Store (in Spanish).
 
 The web version is deployed on Vercel with every push to `main` (config in `vercel.json`).
+
+## License
+
+[MIT](LICENSE) © 2026 Mateo Molina. You can use, change and share Archivero freely, as long as you keep the copyright notice.

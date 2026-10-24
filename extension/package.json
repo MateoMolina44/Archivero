@@ -2,6 +2,7 @@
   "name": "archivero",
   "version": "0.3.8",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "import-design": "node scripts/import-design.mjs",
