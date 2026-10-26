@@ -68,11 +68,30 @@ const TEMPLATE_PATCHES = {
     ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5;overflow-wrap:anywhere'],
     // Entrada de las piezas al doble de lento (los retrasos se duplican en renderVals).
     ['animation:tile-in .8s', () => 'animation:tile-in 1.6s'],
+    ['height:{{t.h}}px;border-radius:8px', () => 'height:{{t.h}}px;border-radius:5px'],
   ],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
   // También pasa la compensación para que el buscador y la botonera no se escalen (overrides.css).
-  Anotador: [['scale({{fs}})', () => 'scale({{stageScale}});--ui-k:{{uiK}};--ui-y:{{uiY}}px']],
+  // Las notas de la grilla, un tercio más grandes (growNotes).
+  Anotador: [
+    ['scale({{fs}})', () => 'scale({{stageScale}});--ui-k:{{uiK}};--ui-y:{{uiY}}px'],
+    ['width:250px;height:333px', () => 'width:' + NOTE_W + 'px;height:' + NOTE_H + 'px'],
+  ],
 };
+
+// Mosaico: al pasar el mouse, el título y las etiquetas van abajo a la izquierda, igual que en las
+// piezas de un tablero (Archivo), en lugar de escribirse letra por letra en el centro.
+const TILE_OV = '<div class="ov" style="position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;font-size:{{t.fs}}px">';
+const TILE_OV_END = '\n      </div>\n    </button>';
+const TILE_CAPTION = '<div class="ov" style="position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;justify-content:flex-end;padding:14px;box-sizing:border-box;gap:4px;text-align:left">'
+  + '<b style="font-size:15px;line-height:1.2;overflow-wrap:anywhere">{{t.name}}</b><span style="font-size:11px">{{t.meta}}</span>';
+
+// Ficha: "+ Nuevo tablero…" en el selector de tablero, con su campo para el nombre (newBoardVals).
+const FICHA_BOARDS = '<sc-for list="{{pe.bopts}}" as="o" hint-placeholder-count="2"><option value="{{o.v}}" selected="{{o.sel}}">{{o.l}}</option></sc-for></select>';
+const FICHA_NEW_BOARD = '<option value="__new">+ Nuevo tablero…</option></select>'
+  + '<sc-if value="{{pe.nbOn}}" hint-placeholder-val="{{false}}"><div style="display:flex;gap:8px;margin-top:8px">'
+  + '<input class="in" ref="{{pe.nbRef}}" value="{{pe.nbName}}" onInput="{{pe.nbInput}}" onKeyDown="{{pe.nbKey}}" maxlength="40" placeholder="Nombre del tablero nuevo" aria-label="Nombre del tablero nuevo" style="flex:1;min-width:0;margin:0">'
+  + '<button class="ob" onClick="{{pe.nbOk}}" style="flex:none">Crear</button></div></sc-if>';
 const FICHA_ANCHOR = '<sc-if value="{{pe.isLink}}" hint-placeholder-val="{{false}}">';
 
 // Ficha completa: botón para ir al sitio de donde viene la referencia, arriba a la izquierda.
@@ -106,6 +125,7 @@ function patchTemplate(name, template) {
   if (template.includes(PROJECT_FOOTER)) list.push([PROJECT_FOOTER, () => '']);
   if (template.includes(CREDITS_ANCHOR)) list.push([CREDITS_ANCHOR, (m) => CREDITS + m]);
   if (template.includes(LANG_ANCHOR)) list.push([LANG_ANCHOR, (m) => LANG_ROW + m]);
+  if (template.includes(FICHA_BOARDS)) list.push([FICHA_BOARDS, (m) => m.replace('</select>', FICHA_NEW_BOARD)]);
   for (const [find, make] of list) {
     if (!template.includes(find)) {
       console.warn('[Archivero] El diseño cambió: no encontré', find, 'en', name);
@@ -155,7 +175,12 @@ function cutMockups(name, template) {
     template = cut(name, template, '<button onClick="{{tShot}}"', '</button>', true);
     template = cut(name, template, '<sc-if value="{{o.shot}}"', '</sc-if>', true);
   }
-  if (name === 'Main') template = cut(name, template, '<sc-if value="{{sel}}"', '<!-- Pieza: ver y editar -->', false);
+  if (name === 'Main') {
+    template = cut(name, template, '<sc-if value="{{sel}}"', '<!-- Pieza: ver y editar -->', false);
+    const a = template.indexOf(TILE_OV);
+    template = cut(name, template, TILE_OV, TILE_OV_END, false);
+    if (a >= 0 && !template.includes(TILE_OV)) template = template.slice(0, a) + TILE_CAPTION + template.slice(a);
+  }
   return template;
 }
 
@@ -208,6 +233,12 @@ async function fetchPreview(inst, it) {
 // Intro del mosaico (el cajón de intro.js): apagada por ahora.
 const INTRO = false;
 
+// Espacio entre las piezas del mosaico, en px.
+const MOSAIC_GAP = 24;
+
+// Notas de la grilla del Anotador: un tercio más grandes que en el diseño (250×333).
+const NOTE_W = 333, NOTE_H = 444, NOTE_GAP = 28;
+
 export function prepareScreen(screen) {
   patchClass(screen.name, screen.Component);
   const props = screen.name === 'Main' && !INTRO ? Object.assign({}, screen.props, { intro: 'nunca' }) : screen.props;
@@ -250,7 +281,9 @@ function patchClass(name, Component) {
   }
 
   if (name === 'Main') {
-    proto.mchunk = function (its, VW, VH, G) {
+    // El diseño pide el mosaico con 12 px entre piezas; acá va siempre MOSAIC_GAP.
+    proto.mchunk = function (its, VW, VH) {
+      const G = MOSAIC_GAP;
       const key = its.map((i) => i.id + ':' + (i.ow || '') + 'x' + (i.oh || '')).join(',') + '|' + VW + 'x' + VH;
       if (this._mc && this._mc.key === key) return this._mc;
       const lay = packMosaic(its.map((it) => { const [w, h] = mosaicBox(this, it, isSpotify(it)); return { it, w, h }; }), VW, VH, G);
@@ -264,6 +297,9 @@ function patchClass(name, Component) {
       this.commitNow();
       this.setState({ edId: id });
     };
+    // El título ya no se escribe letra por letra al pasar el mouse (TILE_CAPTION): sin intervalo.
+    proto.startType = function () {};
+    proto.stopType = function () {};
   }
 
   // Tableros: Spotify ocupa una tarjeta horizontal, con la proporción de su reproductor.
@@ -337,7 +373,7 @@ function patchClass(name, Component) {
       const VW = window.innerWidth || 1440, VH = window.innerHeight || 900;
       const its = this.allItems();
       if (its.length) {
-        mc = this.mchunk(its, VW, VH, 12);
+        mc = this.mchunk(its, VW, VH);
         // La primera vez se encuadra el mosaico; después el lienzo se arrastra sin límite.
         if (!this._panInit) {
           this._panInit = true;
@@ -373,6 +409,8 @@ function patchClass(name, Component) {
       vals.tiles.forEach((t, i) => {
         t.delay = (parseFloat(t.delay) * 2).toFixed(2) + 's';
         const c = mc.lay.cells[i];
+        // Misma leyenda que las piezas de un tablero (Archivo): etiquetas · tamaño · forma · resolución.
+        if (c) t.meta = [this.tagsOf(c.it), this.shapeOf(c.it).lab].filter(Boolean).join(' · ');
         if (c && c.it.kind === 'text') t.tfs = fitText(c.it.text, t.w - 32, t.h - 28, 1.5);
         const pv = c && previewOf(this, c.it);
         if (!pv) return;
@@ -384,6 +422,8 @@ function patchClass(name, Component) {
       });
     }
     if (name === 'Main' && INTRO) introVals(vals);
+    if (name === 'Main') leftDrag(this, vals);
+    if (vals.pe && vals.pe.onBoard) newBoardVals(this, vals.pe);
 
     if (name === 'Archivo' && vals.cards && this.curBoard) {
       const b = this.curBoard();
@@ -405,6 +445,7 @@ function patchClass(name, Component) {
       // llegaba a aplicar la escala y quedaba siempre en 1, recortado en ventanas chicas.)
       // El buscador y la botonera viven dentro del escenario: se compensa la escala para que
       // tengan el mismo tamaño y la misma distancia a los bordes de la ventana que en las demás vistas.
+      growNotes(this, vals);
       const VW = window.innerWidth || 1440, VH = window.innerHeight || 900;
       const k = Math.min(VW / 1440, VH / 900) || 1;
       vals.stageScale = k.toFixed(4);
@@ -476,6 +517,110 @@ function patchClass(name, Component) {
     if (vals.rBoards) vals.rBoards = vals.rBoards.filter((b, i, a) => a.findIndex((x) => x.name === b.name) === i);
     return vals;
   };
+}
+
+// Mosaico: además de con el botón del medio, el lienzo se arrastra con el izquierdo. Un clic sin
+// mover sigue abriendo la pieza; después de arrastrar, el clic que dispara el navegador se descarta.
+const DRAG_MIN = 5; // px que hay que mover para que cuente como arrastre
+const NO_DRAG = 'button:not(.tile),a,input,select,textarea,label,.sb,.sec,.bz,.rz,.mdl';
+function leftDrag(inst, vals) {
+  const { down, move, up } = vals;
+  vals.down = (e) => {
+    if (e.button !== 0) return down(e);
+    if (inst.state.edId || inst.state.sq !== 'off' || inst.state.rq !== 'off' || e.target.closest(NO_DRAG)) return;
+    inst._ld = { x: e.clientX, y: e.clientY, on: false };
+  };
+  vals.move = (e) => {
+    const d = inst._ld;
+    if (d && !(e.buttons & 1)) inst._ld = null;
+    else if (d && !d.on) {
+      if (Math.hypot(e.clientX - d.x, e.clientY - d.y) < DRAG_MIN) return;
+      d.on = true;
+      inst.drag = { x: d.x, y: d.y, px: inst.state.px, py: inst.state.py };
+      inst.setState({ panning: true });
+    }
+    if (d && d.on) e.preventDefault();
+    move(e);
+  };
+  vals.up = (e) => {
+    const d = inst._ld;
+    inst._ld = null;
+    if (d && d.on) swallowClick();
+    up(e);
+  };
+}
+
+function swallowClick() {
+  const stop = (e) => { e.stopPropagation(); e.preventDefault(); };
+  window.addEventListener('click', stop, true);
+  setTimeout(() => window.removeEventListener('click', stop, true), 0);
+}
+
+// Ficha: "+ Nuevo tablero…" en el selector de tablero abre un campo para el nombre; al crearlo,
+// la pieza pasa a ese tablero. Vale para la ficha de todas las vistas.
+function newBoardVals(inst, pe) {
+  const id = inst.state.edId;
+  const nb = inst._nb && inst._nb.id === id ? inst._nb : null;
+  const onBoard = pe.onBoard;
+  pe.onBoard = (e) => {
+    if (e.target.value !== '__new') { inst._nb = null; return onBoard(e); }
+    const cur = pe.bopts.find((o) => o.sel);
+    e.target.value = cur ? cur.v : '';
+    inst._nb = { id, name: '', select: e.target };
+    inst.forceUpdate();
+  };
+  pe.nbOn = !!nb;
+  if (!nb) return;
+  const create = () => {
+    const name = nb.name.trim();
+    if (!name) return;
+    const bid = boardByName(inst, name).id;
+    inst._nb = null;
+    onBoard({ target: { value: bid } });
+    // El selector ya fue tocado a mano, así que no sigue al atributo selected: se elige el tablero nuevo
+    // cuando ya está su opción.
+    setTimeout(() => { nb.select.value = bid; }, 0);
+  };
+  pe.nbName = nb.name;
+  pe.nbRef = (el) => { if (el && !el._f) { el._f = true; setTimeout(() => el.focus({ preventScroll: true }), 30); } };
+  pe.nbInput = (e) => { nb.name = e.target.value; };
+  pe.nbKey = (e) => {
+    if (e.key === 'Enter') create();
+    else if (e.key === 'Escape') { e.stopPropagation(); inst._nb = null; inst.forceUpdate(); }
+  };
+  pe.nbOk = create;
+}
+
+// Anotador: la grilla de notas con las notas un tercio más grandes. Repite el armado de la grilla
+// del diseño (renderVals de Anotador) con NOTE_W×NOTE_H en lugar de 250×333.
+function growNotes(inst, vals) {
+  const all = inst.notes || [];
+  if (!vals.tiles || !all.length) return;
+  const { px, py, mxp, myp } = inst.state;
+  const mod = (v, m) => ((v % m) + m) % m;
+  const lim = (v, m) => Math.max(-m, Math.min(m, v));
+  const GW = NOTE_W, GH = NOTE_H, G = NOTE_GAP;
+  const wrap = all.length >= 12;
+  const COLS = wrap ? 4 : Math.max(1, Math.min(4, all.length)), rows = Math.max(1, Math.ceil(all.length / COLS));
+  const W = COLS * (GW + G), H = rows * (GH + G);
+  const totW = W - G, totH = H - G;
+  const bx = wrap ? 40 : (1440 - totW) / 2, by = wrap ? 90 : Math.max(110, (900 - totH) / 2);
+  inst.panLim = wrap ? null : [totW / 2 + 300, totH / 2 + 300];
+  const ox = wrap ? mod(px, W) : lim(px, totW / 2 + 300), oy = wrap ? mod(py, H) : lim(py, totH / 2 + 300);
+  const rg = wrap ? [-1, 0, 1] : [0];
+  const mk = inst.rm ? 0 : 1;
+  let n = 0;
+  for (const cx of rg) for (const cy of rg) all.forEach((_, k) => {
+    const t = vals.tiles[n++];
+    if (!t) return;
+    t.l = bx + (k % COLS) * (GW + G) + cx * W;
+    t.t = by + Math.floor(k / COLS) * (GH + G) + cy * H;
+    const sx = t.l + ox + GW / 2, sy = t.t + oy + GH / 2;
+    const nx = Math.max(-1.3, Math.min(1.3, (sx - 720) / 720)), ny = Math.max(-1.3, Math.min(1.3, (sy - 450) / 450));
+    const mdx = Math.max(-1, Math.min(1, (mxp - sx) / 720)), mdy = Math.max(-1, Math.min(1, (myp - sy) / 450));
+    t.tf = 'perspective(1100px) rotateY(' + (nx * 16 + mdx * 27 * mk).toFixed(1) + 'deg) rotateX(' + (-ny * 11 - mdy * 21 * mk).toFixed(1) + 'deg)';
+  });
+  vals.world = 'position:absolute;left:0;top:0;width:100%;height:100%;will-change:transform;transform:translate3d(' + ox + 'px,' + oy + 'px,0)';
 }
 
 function isSpotify(it) {

@@ -1,6 +1,6 @@
 # Archivero — contexto para seguir en Claude Code
 
-Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.4.1, 24/10/2026). Leelo entero antes de tocar código.
+Resumen de lo decidido en el diseño (Claude Design, "Archivero - referencia visual", versión 41, 23/10/2026) y de cómo quedó la app real (v0.4.2, 26/10/2026). Leelo entero antes de tocar código.
 
 ## Quién y cómo
 - Usuario: Mateo (Rosario, Argentina). Escribe en **español rioplatense**: respondele en español rioplatense, claro y sin vueltas.
@@ -16,7 +16,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 ## Carpetas
 - `diseno/project/` — el diseño original: archivos `.dc.html` (HTML + `<x-dc>` con `{{huecos}}`, `<sc-for>`, `<sc-if>` y una clase `Component extends DCLogic` con `renderVals()`). Son la base del marcado y del comportamiento; lo que cambió después vive en `extension/src/library/` (ver "Cómo está armado").
 - `diseno/generador/` — scripts Python que generan esos `.dc.html`. Ver "Generador del diseño".
-- `extension/` — la app real (Vite + extensión MV3). `npm install`, `npm run build` → `dist/` (extensión) y `npm run build:web` → `dist-web/` (web en Vercel). Detalles en `extension/README.md`.
+- `extension/` — la app real (Vite + extensión MV3). `npm install`, `npm run build` → `build/` (extensión; antes era `dist/`, ver "Versiones y releases") y `npm run build:web` → `dist-web/` (web en Vercel). Detalles en `extension/README.md`.
 - `PUBLICAR_EN_CHROME.md` — guía para la Chrome Web Store (con las descripciones en ES/EN/PT).
 - `supabase/schema.sql` — tablas, bucket y reglas de acceso de la nube.
 - `README.md` (en inglés, la portada del repo en GitHub) con capturas de `docs/screenshots/` e instrucciones de instalación. `LICENSE`: MIT, a nombre de Mateo Molina.
@@ -66,24 +66,24 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 ## Pantallas y comportamiento
 - **Botonera inferior (pill):** las 3 secciones siempre visibles (Principal, Archivo, Anotador), la actual resaltada; al pasar el mouse aparecen las herramientas a la izquierda y el engranaje a la derecha, con cartelito propio. Mismo tamaño y posición en todas las vistas.
 - **Entrada:** buscador, botonera y carrete aparecen con un fundido de 1,4 s una sola vez por pantalla (`data-ui="done"` en `#app`); las piezas del mosaico entran en 1,6 s escalonadas.
-- **Buscador:** pastilla arriba con el texto "Buscar…" y brillo animado. Se expande en un panel: busca por nombre, nota, sitio, tablero, tipo, `#etiqueta` y color (selector propio con cuadro de saturación, barra de tono, hex y "+" para sumar colores). Recientes y lo guardado recientemente.
+- **Buscador:** pastilla arriba con el texto "Buscar…" y brillo animado. Se expande en un panel: busca por nombre, nota, sitio, tablero, tipo, `#etiqueta` y color (selector propio con cuadro de saturación, barra de tono, hex y "+" para sumar colores). Recientes (textos), Colores recientes (cada uno se suma a la búsqueda) y lo guardado recientemente (cada miniatura abre su ficha).
 - **Principal – vista 2 (mosaico):**
-  - Lienzo infinito que se arrastra con el botón del medio (rueda: vertical; Shift + rueda: horizontal). Un solo bloque que crece con las piezas, cada una una sola vez y sin deformarse.
+  - Lienzo infinito que se arrastra con el botón izquierdo o el del medio (rueda: vertical; Shift + rueda: horizontal). Un solo bloque que crece con las piezas, cada una una sola vez y sin deformarse, con 24 px entre piezas (`MOSAIC_GAP`) y esquinas de 5 px.
   - Spotify con su reproductor horizontal; textos con caja y letra según la cantidad de caracteres.
-  - Pasar el mouse oscurece la pieza y escribe su título. **Tocar una pieza abre su ficha completa.**
+  - Pasar el mouse oscurece la pieza y muestra título y leyenda (etiquetas · tamaño · forma · resolución) abajo a la izquierda, igual que en un tablero (sin escritura letra por letra). **Tocar una pieza abre su ficha completa** (si se arrastró, no).
   - **Intro:** apagada por ahora (`INTRO = false` en `patches.js`). Está hecha en `intro.js`: un cajón 3D (el logo de Figma, frente con borde y tirador) gira mientras el contador sube a 100 %, la cámara se acerca y aparecen los mosaicos, con los colores del tema.
 - **Principal – vista 1 (pantalla completa)**, como https://www.the-005.com/ (`fullscreen.js`):
-  - Solo imágenes y páginas web (sin reproductores). Una pieza a toda la pantalla que cambia sola cada 2 s con corte seco; leyenda abajo a la izquierda (título · sitio).
+  - Solo imágenes y páginas web (sin reproductores). Una pieza a toda la pantalla que cambia sola cada 2 s con corte seco; leyenda abajo a la izquierda (título · sitio, y abajo tamaño · forma · resolución).
   - Carrete de miniaturas arriba de la botonera (3 a la vista, la del medio es la actual) que se desliza en cada cambio. Pasar el mouse lo detiene; se puede arrastrar o tocar una miniatura.
   - Tocar la pieza abre su ficha (el carrusel se detiene mientras está abierta, igual que con el buscador o los ajustes). Rueda y flechas: anterior / siguiente.
 - **Archivo:** lista de tableros y vista de tablero en la misma pantalla. Crear, renombrar, eliminar, portada (automática, una pieza o imagen subida), ordenar (recientes, antiguos, A–Z, cantidad, manual). Vista de tablero con filas justificadas tipo Google Fotos (Mateo dijo que está **perfecta así**). Vistas previas reales de enlaces (Open Graph; YouTube, Vimeo, Spotify, X y TikTok con su reproductor).
-- **Ficha completa:** la misma en todas las vistas (imagen o reproductor a la izquierda, campos a la derecha, "Ir al sitio").
-- **Anotador:** grilla 3D de notas, frente para dibujar e imágenes, reverso para el texto, portada opcional, menú "⋯", orden. Las notas se guardan (`notes.js`).
+- **Ficha completa:** la misma en todas las vistas (imagen o reproductor a la izquierda, campos a la derecha, "Ir al sitio"). El selector de tablero tiene "+ Nuevo tablero…": crea el tablero y pasa la pieza ahí. Los selectores (ficha y Reglas) usan el select personalizable de Chrome (`appearance: base-select`, en `overrides.css`) para que la lista tenga los colores del tema y letra blanca.
+- **Anotador:** grilla 3D de notas (333×444, un tercio más grandes que en el diseño: `NOTE_W`/`NOTE_H` y `growNotes` en `patches.js`), frente para dibujar e imágenes, reverso para el texto, portada opcional, menú "⋯", orden. Las notas se guardan (`notes.js`).
 - **Reglas y ajustes** (engranaje): Reglas, Tableros, Apariencia, **Nube y copia** (cuenta de la nube, exportar/importar copia y las preferencias "Aplicar reglas al guardar" y "Mostrar aviso al guardar") y **Manifesto** (texto del proyecto, open source y enlace a GitHub). Proyectos se sacó por confuso.
 - **Extensión:**
-  - Popup según Figma (node 2082-26) con el tema y el idioma. Al tocar el ícono se abre como panel flotante redondo dentro de la página; en las páginas donde Chrome no deja entrar (chrome://, Web Store…) queda el popup normal.
+  - Popup según Figma (node 2082-26) con el tema y el idioma. Al tocar el ícono se abre como panel flotante redondo dentro de la página; en las páginas donde Chrome no deja entrar (chrome://, Web Store, pestaña nueva…) queda el popup normal. En la propia librería también sale el panel redondo: como no se le puede inyectar código, `background.js` le manda `toggle-panel` y lo abre `main.js` (el panel vive en `src/core/panel.js`, compartido). El selector "Guardar en" usa la lista con el tema (`base-select`, como en la librería); como esa lista no sale del popup, mientras está abierta el panel se estira hacia abajo (`watchPicker` en `popup.js`).
   - Clic derecho sobre imagen, video, enlace, texto o página → "Guardar … en Archivero"; atajo Alt+Shift+S.
-  - Aviso en la página al guardar: con el tema y el idioma, 2 s en pantalla (el mouse encima lo pausa), con "Cambiar" para corregir tablero y etiquetas.
+  - Aviso en la página al guardar: con el tema y el idioma, 2 s en pantalla (el mouse encima lo pausa), con "Cambiar" para corregir tablero y etiquetas. Con "Cambiar" abierto no se cierra mientras se escribe o se elige (6 s sin foco en sus campos), y las teclas no llegan a los atajos de la página. Su selector de tablero también usa la lista con el tema.
 
 ## Nube (Supabase, opcional)
 - `src/library/cloud.js`: inicio de sesión con Google y sincronización. Sin sesión, la app funciona igual que antes, todo local.
@@ -114,8 +114,9 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 
 ## Versiones y releases
 - Cada versión: subir `version` en `extension/package.json` y `extension/public/manifest.json`, `npm run build`, commit y push.
-- El zip del release (`archivero-extension-vX.Y.Z.zip`, en la raíz, ignorado por git) se arma con el contenido de `extension/dist/` y `manifest.json` en la raíz. Con barras `/` en las rutas: `Compress-Archive` de PowerShell 5.1 usa `\` y el zip no anda en Mac/Linux (se arma con `zipfile` de Python).
+- El zip del release (`archivero-extension-vX.Y.Z.zip`, en la raíz, ignorado por git) se arma con el contenido de `extension/build/` y `manifest.json` en la raíz. Con barras `/` en las rutas: `Compress-Archive` de PowerShell 5.1 usa `\` y el zip no anda en Mac/Linux (se arma con `zipfile` de Python).
 - Se publica con `gh release create vX.Y.Z archivero-extension-vX.Y.Z.zip` y notas en inglés. El README apunta al último release.
+- La extensión se carga desde `extension/build/` (no `dist/`). El 26/10/2026 se cambió porque el perfil de Chrome tenía dos entradas apuntando a `dist/`: la actual (`hfek…`) y una vieja de antes del ID fijo (`ofnodd…`). Al arrancar Chrome chocaban y no se cargaba ninguna. Sin `dist/`, la vieja falla sola. No volver a usar `dist/` como salida.
 - Desde la v0.4.0 la extensión tiene ID fijo (`key` en el manifest): actualizar conserva la librería. Desde la 0.3.x Chrome la trata como otra extensión (hay que exportar e importar la copia).
 
 ## Generador del diseño (si querés seguir editando los `.dc.html`)

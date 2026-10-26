@@ -51,7 +51,7 @@ npm install
 npm run build
 ```
 
-Then follow steps 3–6 above and choose the `extension/dist` folder.
+Then follow steps 3–6 above and choose the `extension/build` folder.
 
 ## How to use it
 
@@ -70,7 +70,7 @@ Then follow steps 3–6 above and choose the `extension/dist` folder.
 
 ## Project structure
 
-- `extension/`: the actual code (Vite). `npm run build` creates the MV3 extension in `dist/`, `npm run build:web` the web version in `dist-web/`. Developer notes (in Spanish) in `extension/README.md`.
+- `extension/`: the actual code (Vite). `npm run build` creates the MV3 extension in `build/`, `npm run build:web` the web version in `dist-web/`. Developer notes (in Spanish) in `extension/README.md`.
 - `diseno/`: the approved design (`project/*.dc.html`, the source of truth for the UI) and its generators.
 - `docs/screenshots/`: the screenshots above.
 - `supabase/schema.sql`: database tables and access rules for the optional cloud sync.

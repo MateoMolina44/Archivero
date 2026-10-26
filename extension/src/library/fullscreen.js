@@ -21,7 +21,8 @@ const STAGE = '<div class="fs-stage" role="button" tabindex="0" aria-label="{{fs
   + '</sc-if></div></sc-for></div>';
 
 const UI = '<sc-if value="{{fs.any}}">'
-  + '<div class="fs-cap" aria-live="polite"><p><b>{{fs.title}}</b><sc-if value="{{fs.site}}"><span> · {{fs.site}}</span></sc-if></p></div>'
+  + '<div class="fs-cap" aria-live="polite"><div><p><b>{{fs.title}}</b><sc-if value="{{fs.site}}"><span> · {{fs.site}}</span></sc-if></p>'
+  + '<sc-if value="{{fs.meta}}"><p class="fs-meta">{{fs.meta}}</p></sc-if></div></div>'
   + '<div class="fs-reel" onPointerEnter="{{fs.enter}}" onPointerLeave="{{fs.leave}}" onPointerDown="{{fs.down}}" onPointerMove="{{fs.move}}" onPointerUp="{{fs.up}}" onPointerCancel="{{fs.up}}">'
   + '<div class="fs-track" style="{{fs.track}}"><sc-for list="{{fs.thumbs}}" as="r" hint-placeholder-count="0">'
   + '<button class="fs-th {{r.cls}}" style="left:{{r.x}}px" data-p="{{r.p}}" tabindex="-1" aria-label="{{r.label}}">'
@@ -101,6 +102,8 @@ export function fullscreenVals(inst, vals, preview) {
   vals.fs = {
     any: true, none: false, slides, thumbs,
     title: it.title || 'Sin título', site: inst.dom(it.url),
+    // Misma leyenda que en un tablero y en el mosaico: tamaño · forma · resolución.
+    meta: inst.shapeOf ? inst.shapeOf(it).lab : '',
     label: (it.title || 'Sin título') + ': ver ficha completa',
     // La miniatura actual queda en el medio de las tres; al arrastrar, el carrete sigue al puntero.
     track: 'transform:translate3d(' + (dragging ? TH - fs.drag.p0 * TH + fs.drag.dx : TH - fs.pos * TH) + 'px,0,0)'

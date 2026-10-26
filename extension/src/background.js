@@ -5,6 +5,7 @@ import { uid, siteTags } from './core/util.js';
 import { embedOf } from './core/embeds.js';
 import { previewMeta, fetchBlob } from './core/pagemeta.js';
 import { translate } from './core/i18n.js';
+import { togglePanel } from './core/panel.js';
 
 const MENUS = [
   { id: 'save-image', title: 'Guardar imagen en Archivero', contexts: ['image'] },
@@ -51,10 +52,13 @@ chrome.commands.onCommand.addListener(async (command) => {
 // La ventana del popup la dibuja Chrome y siempre es un rectángulo opaco, así que al tocar el ícono
 // el mismo popup (popup.html?frame) se muestra flotando dentro de la página, con esquinas redondas.
 // En las páginas donde Chrome no deja entrar a las extensiones (chrome://, la Web Store, la pestaña
-// nueva…) queda el popup de siempre, ocupando toda su ventana.
+// nueva…) queda el popup de siempre, ocupando toda su ventana. El panel está en core/panel.js.
 
-const isRestricted = (url) => !/^(https?|file):/.test(url || '')
-  || /^https:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/.test(url);
+// La librería (library.html) es de la extensión: ahí el panel lo abre la propia página (main.js).
+const LIBRARY = chrome.runtime.getURL('library.html');
+const isLibrary = (url) => (url || '').startsWith(LIBRARY);
+const isRestricted = (url) => !isLibrary(url) && (!/^(https?|file):/.test(url || '')
+  || /^https:\/\/(chromewebstore\.google\.com|chrome\.google\.com\/webstore)/.test(url));
 
 // Con popup asignado, Chrome lo abre solo; sin popup, el clic llega a action.onClicked.
 function syncPopup(tabId, url) {
@@ -65,62 +69,20 @@ chrome.tabs.onActivated.addListener(({ tabId }) => chrome.tabs.get(tabId).then((
 
 chrome.action.onClicked.addListener(async (tab) => {
   try {
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: togglePanel, args: [chrome.runtime.getURL('popup.html?frame')] });
+    const src = chrome.runtime.getURL('popup.html?frame');
+    if (isLibrary(tab.url)) {
+      // A las páginas de la extensión no se les puede inyectar código: se le pide a la librería.
+      const res = await chrome.runtime.sendMessage({ type: 'toggle-panel', tabId: tab.id, src });
+      if (!res?.ok) throw new Error('La librería no respondió');
+    } else {
+      await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: togglePanel, args: [src] });
+    }
   } catch {
     // No se pudo entrar en la página (archivo local sin permiso, visor de PDF…): popup de siempre.
     await chrome.action.setPopup({ tabId: tab.id, popup: 'popup.html' });
     chrome.action.openPopup().catch(() => {});
   }
 });
-
-// Corre dentro de la página. Si el panel ya está abierto, lo cierra (el ícono funciona como interruptor).
-function togglePanel(src) {
-  const ID = 'archivero-panel';
-  const prev = document.getElementById(ID);
-  if (prev) { prev.dispatchEvent(new Event('archivero-close')); return; }
-
-  const host = document.createElement('div');
-  host.id = ID;
-  host.style.cssText = 'all:initial;position:fixed;top:10px;right:10px;z-index:2147483647';
-  const root = host.attachShadow({ mode: 'closed' });
-  root.innerHTML = '<style>'
-    + 'iframe{display:block;width:342px;height:340px;border:0;border-radius:22px;background:transparent;color-scheme:normal;'
-    + 'box-shadow:0 12px 40px rgba(0,0,0,.35);transform-origin:top right;animation:in .35s cubic-bezier(.4,0,.2,1) both}'
-    + 'iframe.out{animation:out .2s cubic-bezier(.4,0,.2,1) both}'
-    + '@keyframes in{from{opacity:0;transform:translateY(-8px) scale(.96)}}'
-    + '@keyframes out{to{opacity:0;transform:translateY(-8px) scale(.96)}}'
-    + '@media (prefers-reduced-motion:reduce){iframe,iframe.out{animation-duration:.01ms}}</style>';
-  const frame = document.createElement('iframe');
-  frame.src = src;
-  frame.title = 'Archivero';
-  root.appendChild(frame);
-  document.documentElement.appendChild(host);
-
-  let closed = false;
-  const close = (then) => {
-    if (closed) return;
-    closed = true;
-    removeEventListener('message', onMsg);
-    removeEventListener('mousedown', onDown, true);
-    removeEventListener('keydown', onKey, true);
-    frame.classList.add('out');
-    setTimeout(() => { host.remove(); if (then) then(); }, 200);
-  };
-  // Mensajes del popup: su alto, cerrar, y guardar (se cierra antes, para no salir en la captura).
-  const onMsg = (e) => {
-    if (e.source !== frame.contentWindow || !e.data || typeof e.data.archivero !== 'string') return;
-    if (e.data.archivero === 'size') frame.style.height = Math.ceil(e.data.h) + 'px';
-    if (e.data.archivero === 'close') close();
-    if (e.data.archivero === 'save') close(() => chrome.runtime.sendMessage({ type: 'save-current-page' }));
-  };
-  // Los clics dentro del panel quedan en el iframe; los que llegan acá son de afuera.
-  const onDown = (e) => { if (e.target !== host) close(); };
-  const onKey = (e) => { if (e.key === 'Escape') close(); };
-  host.addEventListener('archivero-close', () => close());
-  addEventListener('message', onMsg);
-  addEventListener('mousedown', onDown, true);
-  addEventListener('keydown', onKey, true);
-}
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   (async () => {
@@ -289,6 +251,7 @@ async function showToast(tabId, item, s) {
 // Se ejecuta DENTRO de la página: debe ser autocontenida (sin imports ni variables de afuera).
 function injectToast(p) {
   const SHOW_MS = 2000;
+  const OPEN_MS = 6000; // con "Cambiar" abierto y sin foco en sus campos
   const T = (k) => (p.L && p.L[k]) || k;
   // Colores y tipografía de Apariencia (la librería copia su elección en los ajustes compartidos).
   // Mismos tonos que el popup (public/popup-theme.js): panel = pastilla, campos, botón claro y borde.
@@ -326,7 +289,15 @@ function injectToast(p) {
     label{font-size:11px;font-weight:600;opacity:.85}
     select,input{width:100%;height:34px;border-radius:30px;border:1px solid rgba(255,255,255,.2);background:${hsl(L.field)};color:#fff;font:13px ${font};padding:0 14px;outline:none}
     select:focus,input:focus{border-color:#fff}
-    select option{color:#111}
+    select option{color:#fff;background:${hsl(L.field)}}
+    /* Lista desplegable con los colores del tema (como en la librería y el popup), en lugar de la del sistema. */
+    select{appearance:base-select;display:flex;align-items:center;cursor:pointer}
+    select::picker-icon{color:#fff}
+    select::picker(select){appearance:base-select;max-height:240px;overflow-y:auto;margin:6px 0;padding:5px;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:${hsl(L.field)};color:#fff;box-shadow:0 10px 28px rgba(0,0,0,.35);font-family:${font}}
+    select option{padding:7px 10px;border-radius:10px;font:13px ${font};outline:none}
+    select option:hover,select option:focus-visible{background:rgba(255,255,255,.12)}
+    select option:checked{background:rgba(255,255,255,.2);font-weight:600}
+    select option::checkmark{display:none}
     .hint{font-size:11px;opacity:.8}
   `;
   root.innerHTML = `<style>${css}</style>
@@ -365,10 +336,17 @@ function injectToast(p) {
   render();
 
   // Se va a los 2 s. Pasar el mouse lo pausa; cada cambio vuelve a contar 2 s.
+  // Con "Cambiar" abierto no se va mientras se escribe o se elige algo: al abrir la lista del
+  // selector el mouse "sale" del aviso, y antes se cerraba mientras se tipeaba el tablero nuevo.
   let timer;
   let hovering = false;
+  const typing = () => !!root.activeElement && /^(INPUT|SELECT)$/.test(root.activeElement.tagName);
   const close = () => { clearTimeout(timer); box.classList.add('out'); setTimeout(() => host.remove(), 300); };
-  const arm = () => { clearTimeout(timer); if (!hovering) timer = setTimeout(close, SHOW_MS - 300); }; // 300 ms de salida
+  const arm = () => {
+    clearTimeout(timer);
+    if (hovering || typing()) return;
+    timer = setTimeout(close, (box.classList.contains('open') ? OPEN_MS : SHOW_MS) - 300); // 300 ms de salida
+  };
   const send = (patch) => chrome.runtime.sendMessage({ type: 'patch-item', id: p.id, patch });
   const pickBoard = (name) => { state.board = name; render(); send({ board: name }); arm(); };
   const createBoard = async () => {
@@ -400,6 +378,11 @@ function injectToast(p) {
   });
   host.addEventListener('mouseenter', () => { hovering = true; clearTimeout(timer); });
   host.addEventListener('mouseleave', () => { hovering = false; arm(); });
+  root.addEventListener('focusin', () => { if (typing()) clearTimeout(timer); });
+  root.addEventListener('focusout', () => setTimeout(arm, 0)); // activeElement ya es el nuevo
+  // Las teclas no siguen hacia la página: muchos sitios usan atajos de teclado (Pinterest, YouTube,
+  // X…) que se quedaban con lo que se escribía en el nombre del tablero o las etiquetas.
+  for (const type of ['keydown', 'keyup', 'keypress']) host.addEventListener(type, (e) => e.stopPropagation());
   document.documentElement.appendChild(host);
   arm();
 }

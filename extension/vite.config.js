@@ -5,7 +5,9 @@ import { resolve } from 'path';
 export default defineConfig({
   base: './',
   build: {
-    outDir: 'dist',
+    // Antes era dist/: Chrome guardaba ahí una entrada vieja de la extensión (de antes del ID fijo)
+    // que chocaba con la actual al arrancar y no cargaba ninguna de las dos.
+    outDir: 'build',
     emptyOutDir: true,
     modulePreload: false,
     rollupOptions: {

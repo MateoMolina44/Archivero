@@ -14,6 +14,7 @@ import { loadNotes, attachNotes, detachNotes, onNotesSaved } from './notes.js';
 import { startCloud, attachCloud, schedule as cloudSync } from './cloud.js';
 import * as settings from '../core/settings.js';
 import { onChange } from '../core/db.js';
+import { togglePanel } from '../core/panel.js';
 import { translate, localizeTemplate, uiLang, trackMissing } from '../core/i18n.js';
 
 const S = Object.fromEntries([Main, Main1, Archivo, Anotador, Seleccion].map((s) => [s.name, prepareScreen(s)]));
@@ -147,6 +148,19 @@ settings.onChange(() => {
 });
 
 onNotesSaved(() => cloudSync());
+
+// Ícono de la extensión con la librería abierta: el panel flotante redondo, igual que en las páginas
+// web (background.js no puede inyectarlo en una página de la extensión). Solo la pestaña tocada.
+if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage && chrome.tabs?.getCurrent) {
+  let myTabId = null;
+  chrome.tabs.getCurrent().then((t) => { myTabId = t ? t.id : null; }, () => {});
+  chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+    if (msg?.type !== 'toggle-panel' || msg.tabId !== myTabId) return false;
+    togglePanel(msg.src);
+    sendResponse({ ok: true });
+    return false;
+  });
+}
 
 Promise.all([settings.load(), loadNotes()]).then(() => {
   show(routeFromHash());

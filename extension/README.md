@@ -4,8 +4,8 @@ Librería personal de inspiraciones + extensión de Chrome que guarda y organiza
 Todo se guarda en el navegador (localStorage + IndexedDB). Opcional: iniciar sesión con Google para sincronizar la librería en la nube (Supabase) entre la extensión, la web y otras computadoras. Copia con Exportar/Importar en Reglas y ajustes → Nube y copia (incluye las notas del Anotador).
 
 ## Instalar
-1. `npm install` y `npm run build` (genera `dist/`).
-2. Abrí `chrome://extensions`, activá **Modo desarrollador** → **Cargar descomprimida** → carpeta `dist`.
+1. `npm install` y `npm run build` (genera `build/`).
+2. Abrí `chrome://extensions`, activá **Modo desarrollador** → **Cargar descomprimida** → carpeta `build`.
 3. Después de recompilar, tocá "Recargar" en `chrome://extensions`.
 
 ## Cómo guardar

@@ -1,8 +1,8 @@
 # Publicar Archivero en Chrome Web Store
 
-Archivo a subir: un zip con el contenido de `extension/dist/` después de `npm run build`, con `manifest.json` en la raíz del zip.
+Archivo a subir: un zip con el contenido de `extension/build/` después de `npm run build`, con `manifest.json` en la raíz del zip.
 
-**Ojo con el campo `key`:** el manifest lo tiene para que la extensión cargada a mano tenga siempre el mismo ID (lo necesita el inicio de sesión con Google). La tienda no lo acepta: en el zip para la tienda, borrá la línea `"key": …` del `manifest.json` de `dist/` (no del de `public/`). Para eso conviene armar un zip aparte, `archivero-tienda-vX.Y.Z.zip`; el de GitHub sigue con `key`.
+**Ojo con el campo `key`:** el manifest lo tiene para que la extensión cargada a mano tenga siempre el mismo ID (lo necesita el inicio de sesión con Google). La tienda no lo acepta: en el zip para la tienda, borrá la línea `"key": …` del `manifest.json` de `build/` (no del de `public/`). Para eso conviene armar un zip aparte, `archivero-tienda-vX.Y.Z.zip`; el de GitHub sigue con `key`.
 
 ## 0. Probala antes de subirla
 1. Descomprimí `archivero-extension-vX.Y.Z.zip` en una carpeta.
@@ -70,5 +70,5 @@ Archivo a subir: un zip con el contenido de `extension/dist/` después de `npm r
 
 ## 6. Actualizaciones
 1. Subí `"version"` en `extension/public/manifest.json` y en `package.json`.
-2. `npm run build` dentro de `extension/` y volvé a armar el zip desde `dist/` (con `manifest.json` en la raíz y sin `key`).
+2. `npm run build` dentro de `extension/` y volvé a armar el zip desde `build/` (con `manifest.json` en la raíz y sin `key`).
 3. En el panel: **Paquete → Subir paquete nuevo** → enviar para revisión.

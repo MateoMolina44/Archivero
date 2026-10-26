@@ -36,6 +36,7 @@ Eliminar|Delete|Excluir
 Buscar en notas…|Search notes…|Buscar nas notas…
 Recientes|Recent|Recentes
 Todavía no buscaste nada.|You haven't searched for anything yet.|Você ainda não buscou nada.
+Colores recientes|Recent colors|Cores recentes
 Notas recientes|Recent notes|Notas recentes
 Tus notas van a aparecer acá.|Your notes will show up here.|Suas notas vão aparecer aqui.
 Reglas y ajustes|Rules and settings|Regras e ajustes

@@ -44,6 +44,10 @@
 .srch-clr { border: 0; padding: 0; background: none; color: #fff; font: inherit; opacity: .75; cursor: pointer; }
 .srch-clr:hover { opacity: 1; text-decoration: underline; }
 .srch-recs { display: flex; flex-wrap: wrap; gap: 6px; }
+.srch-h2 { margin-top: 18px; }
+.srch-sv-r { display: block; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.srch-sv-r:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.srch-recs .srch-col { width: 26px; height: 26px; }
 .srch-chip { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 12px; border: 0; border-radius: 30px; background: var(--chip); color: #111; font: 600 12px var(--f2); cursor: pointer; }
 .srch-chip:hover { background: #fff; }
 .srch-dot { width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 0 1px rgba(0, 0, 0, .2); }
@@ -78,6 +82,8 @@
 /* Leyenda abajo a la izquierda, sobre un degradé para que se lea en imágenes claras. */
 .fs-cap { position: absolute; left: 0; right: 0; bottom: 0; height: 154px; z-index: 2; pointer-events: none; display: flex; align-items: flex-end; padding: 0 0 32px 32px; box-sizing: border-box; background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .3)); }
 .fs-cap p { margin: 0; max-width: calc(50% - 150px); font-size: 17px; font-weight: 500; line-height: 1.5; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fs-cap > div { width: 100%; }
+.fs-cap .fs-meta { margin-top: 2px; font-size: 13px; font-weight: 500; opacity: .8; }
 .fs-cap b { font-weight: 700; font-family: var(--f1); }
 .fs-cap span { opacity: .8; }
 /* Carrete: tres miniaturas de 60×40 a la vista, arriba de la botonera, con el color de las pastillas. */
@@ -98,6 +104,23 @@
 
 /* ---------- Intro con el cajón (intro.js) ---------- */
 .dw-l { position: absolute; inset: 0; box-sizing: border-box; backface-visibility: visible; }
+
+/* Selectores (tablero de la ficha y los de Reglas): la lista desplegable con los colores del tema y
+   letra blanca, en lugar de la lista del sistema (blanca con la opción elegida en azul). Usa el
+   select personalizable de Chrome (appearance: base-select); donde no existe, al menos las opciones
+   toman el fondo del tema. La flecha sigue siendo la del diseño (fondo del select). */
+#app .sel3, #app .rz-s { appearance: base-select !important; display: flex; align-items: center; cursor: pointer; }
+#app .sel3::picker-icon, #app .rz-s::picker-icon { display: none; }
+#app .sel3::picker(select), #app .rz-s::picker(select) {
+  /* Siempre hacia abajo (sin darse vuelta cuando falta lugar): si no entra, la lista se desplaza. */
+  position-try-fallbacks: none; max-height: 260px; overflow-y: auto;
+  appearance: base-select; margin-top: 6px; padding: 6px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 16px;
+  background: var(--field); color: #fff; box-shadow: 0 12px 32px rgba(0, 0, 0, .35); font-family: var(--f2);
+}
+#app .sel3 option, #app .rz-s option { color: #fff !important; background: var(--field); padding: 8px 12px; border-radius: 10px; font-size: 14px; outline: none; }
+#app .sel3 option:hover, #app .sel3 option:focus-visible, #app .rz-s option:hover, #app .rz-s option:focus-visible { background: rgba(255, 255, 255, .12); }
+#app .sel3 option:checked, #app .rz-s option:checked { background: rgba(255, 255, 255, .2); font-weight: 600; }
+#app .sel3 option::checkmark, #app .rz-s option::checkmark { display: none; }
 
 /* Mosaico: el botón de cada pieza tenía el fondo gris claro por defecto de los botones, que se veía
    como un borde fino en las esquinas redondeadas y en los bordes de las imágenes. */

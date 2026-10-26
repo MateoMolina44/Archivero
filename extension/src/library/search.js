@@ -14,6 +14,7 @@ import { embedOf } from '../core/embeds.js';
 
 const RECENT_KEY = 'archivero.search.v1';
 const MAX_RESULTS = 60;
+const MAX_RECENT_COLORS = 12;
 const MATCH = 22; // distancia máxima entre colores (ΔE94) para considerarlos parecidos
 
 // ---------- plantillas ----------
@@ -52,10 +53,15 @@ const RESULTS = '<sc-if value="{{sResOn}}" hint-placeholder-val="{{false}}">'
   + '<sc-if value="{{v.noImg}}" hint-placeholder-val="{{false}}"><span class="srch-t">{{v.title}}</span></sc-if>'
   + '</button></sc-for></div></sc-if>';
 
+// Recientes: los textos buscados y, en su propia sección, los colores (cada uno se suma a la búsqueda).
 const RECENTS = '<div class="srch-h"><span>Recientes</span><sc-if value="{{sRecAny}}" hint-placeholder-val="{{false}}"><button class="srch-clr" onClick="{{sRecClear}}">Borrar</button></sc-if></div>'
   + '<sc-if value="{{sRecNone}}" hint-placeholder-val="{{true}}"><div style="font-size:12px;opacity:.8">Todavía no buscaste nada.</div></sc-if>'
-  + '<div class="srch-recs"><sc-for list="{{sRec}}" as="r" hint-placeholder-count="0"><button class="chip srch-chip" onClick="{{r.go}}" style="--d:{{r.d}}">'
-  + '<sc-for list="{{r.cols}}" as="c" hint-placeholder-count="0"><span class="srch-dot" style="background:{{c}}"></span></sc-for>{{r.l}}</button></sc-for></div>';
+  + '<div class="srch-recs"><sc-for list="{{sRec}}" as="r" hint-placeholder-count="0"><button class="chip srch-chip" onClick="{{r.go}}" style="--d:{{r.d}}">{{r.l}}</button></sc-for></div>'
+  + '<sc-if value="{{sColAny}}" hint-placeholder-val="{{false}}"><div class="srch-h srch-h2"><span>Colores recientes</span><button class="srch-clr" onClick="{{sColClear}}">Borrar</button></div>'
+  + '<div class="srch-recs"><sc-for list="{{sColRec}}" as="c" hint-placeholder-count="0"><button class="vt srch-col" onClick="{{c.go}}" aria-label="{{c.hex}}" title="{{c.hex}}" style="--d:{{c.d}};background:{{c.hex}}"></button></sc-for></div></sc-if>';
+
+const RECENT_TILE = '<div class="vt" style="flex:none;width:110px;height:72px;background:var(--chip);border-radius:6px;overflow:hidden;--d:{{v.d}};">';
+const RECENT_TILE_END = '</sc-if></div></sc-for>';
 
 // Reemplaza el texto fijo del buscador por el campo y el contenido del panel por
 // selector + resultados, conservando lo que había ("Guardado recientemente" / "Notas recientes")
@@ -73,7 +79,10 @@ export function patchSearchTemplate(name, t) {
     console.warn('[Archivero] El diseño cambió: no encontré el panel del buscador en', name);
     return t;
   }
-  const keep = t.slice(rest + 'Todavía no buscaste nada.</div>'.length, end);
+  // "Guardado recientemente": cada miniatura abre la ficha de su pieza (en el diseño no hacía nada).
+  const keep = t.slice(rest + 'Todavía no buscaste nada.</div>'.length, end)
+    .replace(RECENT_TILE, '<button class="vt srch-sv-r" onClick="{{v.open}}" title="{{v.title}}" aria-label="Abrir {{v.title}}" style="flex:none;width:110px;height:72px;background:var(--chip);border-radius:6px;overflow:hidden;--d:{{v.d}};">')
+    .replace(RECENT_TILE_END, '</sc-if></button></sc-for>');
   return t.slice(0, span) + BAR + t.slice(x, pinIn)
     + PICKER + RESULTS + '<sc-if value="{{sIdle}}" hint-placeholder-val="{{true}}">' + RECENTS + keep + '</sc-if>'
     + t.slice(end);
@@ -227,12 +236,14 @@ function palette(src) {
 function loadRecent() {
   try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').filter((r) => r && (r.q || (r.cols || []).length)); } catch { return []; }
 }
+function saveRecent(list) {
+  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.filter((r) => r.q || (r.cols || []).length))); } catch { /* sin espacio */ }
+}
 function pushRecent(q, cols) {
   q = q.trim();
   if (!q && !cols.length) return;
   const key = JSON.stringify([q, cols]);
-  const list = [{ q, cols }].concat(loadRecent().filter((r) => JSON.stringify([r.q, r.cols || []]) !== key)).slice(0, 8);
-  try { localStorage.setItem(RECENT_KEY, JSON.stringify(list)); } catch { /* sin espacio */ }
+  saveRecent([{ q, cols }].concat(loadRecent().filter((r) => JSON.stringify([r.q, r.cols || []]) !== key)).slice(0, 8));
 }
 
 // ---------- valores para la plantilla ----------
@@ -352,11 +363,26 @@ export function searchVals(inst, name, vals) {
   vals.sIdle = !active && !S.pick;
 
   const rec = loadRecent();
-  vals.sRec = rec.map((r, i) => ({
-    l: r.q, cols: r.cols || [], d: (0.3 + i * 0.05).toFixed(2) + 's',
-    go: () => { Object.assign(S, { q: r.q, cols: (r.cols || []).slice(), pick: null }); render(); },
+  const texts = rec.filter((r) => r.q);
+  vals.sRec = texts.map((r, i) => ({
+    l: r.q, d: (0.3 + i * 0.05).toFixed(2) + 's',
+    go: () => { Object.assign(S, { q: r.q, pick: null }); render(); },
   }));
-  vals.sRecAny = rec.length > 0;
-  vals.sRecNone = rec.length === 0;
-  vals.sRecClear = () => { try { localStorage.removeItem(RECENT_KEY); } catch { /* nada */ } render(); };
+  vals.sRecAny = texts.length > 0;
+  vals.sRecNone = texts.length === 0;
+  vals.sRecClear = () => { saveRecent(rec.map((r) => ({ q: '', cols: r.cols || [] }))); render(); };
+
+  const recCols = [...new Set(rec.flatMap((r) => r.cols || []))].slice(0, MAX_RECENT_COLORS);
+  vals.sColAny = !notes && recCols.length > 0;
+  vals.sColRec = recCols.map((hex, i) => ({
+    hex, d: (0.35 + i * 0.04).toFixed(2) + 's',
+    go: () => { if (!S.cols.includes(hex)) S.cols.push(hex); S.pick = null; render(); },
+  }));
+  vals.sColClear = () => { saveRecent(rec.map((r) => ({ q: r.q, cols: [] }))); render(); };
+
+  // Guardado recientemente (las mismas 8 piezas que arma libVals del diseño): abren su ficha.
+  if (vals.srec && !notes) {
+    const recent = inst.allItems().slice(0, vals.srec.length);
+    vals.srec.forEach((v, i) => { v.open = () => { vals.closeS(); inst.setState({ edId: recent[i].id }); }; });
+  }
 }

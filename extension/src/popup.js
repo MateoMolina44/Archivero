@@ -19,10 +19,45 @@ translateDom(document.body, LANG);
 const FRAME = new URLSearchParams(location.search).has('frame');
 const tell = (msg) => window.parent.postMessage(msg, '*');
 const close = () => (FRAME ? tell({ archivero: 'close' }) : window.close());
+// Lugar extra debajo del panel para la lista abierta del selector (ver watchPicker).
+let room = 0;
+const tellSize = () => tell({ archivero: 'size', h: document.body.getBoundingClientRect().height + room });
 if (FRAME) {
-  new ResizeObserver(() => tell({ archivero: 'size', h: document.body.getBoundingClientRect().height })).observe(document.body);
+  new ResizeObserver(tellSize).observe(document.body);
   addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
 }
+
+// La lista del selector (select personalizable, popup.css) se dibuja dentro del popup y no puede
+// salir de él: mientras está abierta, el panel flotante (iframe) o la ventana del popup se estiran
+// hacia abajo para que entre entera. El fondo del iframe es transparente, así que no se ve el estirón.
+const isOpen = () => { try { return board.matches(':open'); } catch { return false; } };
+function pickerRoom() {
+  const opts = [...board.options].reduce((h, o) => h + o.getBoundingClientRect().height, 0);
+  const listH = Math.min(230, opts + 12);
+  return Math.max(0, Math.ceil(board.getBoundingClientRect().bottom + 6 + listH + 12 - document.body.getBoundingClientRect().height));
+}
+function setRoom(px) {
+  room = px;
+  if (FRAME) tellSize();
+  else document.documentElement.style.paddingBottom = px ? px + 'px' : '';
+}
+let watching = false;
+function watchPicker() {
+  if (watching) return;
+  watching = true;
+  const t0 = performance.now();
+  const tick = () => {
+    const open = isOpen();
+    const want = open ? pickerRoom() : 0;
+    if (want !== room) setRoom(want);
+    // Sigue mirando mientras esté abierta (y un momento después del clic, hasta que se abra).
+    if (open || performance.now() - t0 < 400) requestAnimationFrame(tick);
+    else watching = false;
+  };
+  requestAnimationFrame(tick);
+}
+board.addEventListener('pointerdown', watchPicker);
+board.addEventListener('keydown', watchPicker);
 
 async function render() {
   const s = await settings.load();
