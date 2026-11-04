@@ -157,7 +157,13 @@ function patch(el, v) {
   morph(el, v.kids);
 }
 
+// Con data-key (en los elementos de un <sc-for>), cada elemento se reusa por su clave y no por su
+// posición: si la lista cambia, los que siguen estando no se recrean (ni repiten su animación de
+// entrada) y los nuevos se crean desde cero.
+const keyOf = (n) => (n && n._a ? n._a['data-key'] : n && n.attrs ? n.attrs['data-key'] : null) ?? null;
+
 function morph(parent, kids) {
+  if (kids.some((v) => keyOf(v) != null)) return morphKeyed(parent, kids);
   let i = 0;
   for (; i < kids.length; i++) {
     const v = kids[i];
@@ -171,6 +177,27 @@ function morph(parent, kids) {
     if (cur.nodeType === 1 && cur.localName === v.t) patch(cur, v);
     else parent.replaceChild(mk(v), cur);
   }
+  while (parent.childNodes.length > kids.length) parent.removeChild(parent.lastChild);
+}
+
+function morphKeyed(parent, kids) {
+  const old = new Map();
+  for (const c of parent.childNodes) if (keyOf(c) != null) old.set(keyOf(c), c);
+  kids.forEach((v, i) => {
+    const k = keyOf(v);
+    const cur = parent.childNodes[i];
+    let el;
+    if (k != null) {
+      el = old.get(k);
+      if (el && el.localName === v.t) { old.delete(k); patch(el, v); }
+      else el = mk(v);
+    } else if (cur && keyOf(cur) == null && (v.t === '#t' ? cur.nodeType === 3 : cur.nodeType === 1 && cur.localName === v.t)) {
+      el = cur;
+      if (v.t === '#t') { if (el.textContent !== v.v) el.textContent = v.v; }
+      else patch(el, v);
+    } else el = mk(v);
+    if (el !== cur) parent.insertBefore(el, cur || null);
+  });
   while (parent.childNodes.length > kids.length) parent.removeChild(parent.lastChild);
 }
 

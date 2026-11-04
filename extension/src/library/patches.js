@@ -66,9 +66,14 @@ const TEMPLATE_PATCHES = {
   Main: [
     ['{{t.dom}}</span></sc-if>', (m) => m + TILE_FRAME],
     ['background:var(--pill);font-size:13px;line-height:1.5', () => 'background:var(--pill);font-size:{{t.tfs}}px;line-height:1.5;overflow-wrap:anywhere'],
-    // Entrada de las piezas al doble de lento (los retrasos se duplican en renderVals).
-    ['animation:tile-in .8s', () => 'animation:tile-in 1.6s'],
+    // Entrada de las piezas: al doble de lento al abrir (los retrasos se duplican en renderVals) y
+    // más rápida para las que aparecen al arrastrar (tileAnim). Cada pieza tiene su clave para que el
+    // runtime no la recree (ni repita el fundido) mientras sigue a la vista.
+    ['animation:tile-in .8s', () => 'animation:tile-in {{t.dur}}'],
+    ['<button class="tile" onClick', () => '<button class="tile" data-key="{{t.key}}" onClick'],
     ['height:{{t.h}}px;border-radius:8px', () => 'height:{{t.h}}px;border-radius:5px'],
+    // El lienzo se mueve con inercia (glide): se le pone una marca para encontrarlo.
+    ['<div style="{{world}}">', () => '<div data-world style="{{world}}">'],
   ],
   // La escala de la pantalla usaba {{fs}}, que en el Anotador pisa otro valor (estilos de texto).
   // También pasa la compensación para que el buscador y la botonera no se escalen (overrides.css).
@@ -287,7 +292,8 @@ function patchClass(name, Component) {
       const key = its.map((i) => i.id + ':' + (i.ow || '') + 'x' + (i.oh || '')).join(',') + '|' + VW + 'x' + VH;
       if (this._mc && this._mc.key === key) return this._mc;
       const lay = packMosaic(its.map((it) => { const [w, h] = mosaicBox(this, it, isSpotify(it)); return { it, w, h }; }), VW, VH, G);
-      this._mc = { key, W: lay.W, H: lay.H, lay, cells: (ci, cj) => (ci === 0 && cj === 0 ? lay.cells : []) };
+      // Solo se dibujan las piezas a la vista (visibleCells): el resto ni se crea ni carga su imagen.
+      this._mc = { key, W: lay.W, H: lay.H, lay, cells: (ci, cj) => (ci === 0 && cj === 0 ? this._vis || lay.cells : []) };
       return this._mc;
     };
     // Tocar una pieza abre directamente su ficha completa (antes la elevaba y mostraba un resumen
@@ -374,14 +380,21 @@ function patchClass(name, Component) {
       const its = this.allItems();
       if (its.length) {
         mc = this.mchunk(its, VW, VH);
-        // La primera vez se encuadra el mosaico; después el lienzo se arrastra sin límite.
+        // La primera vez se encuadra el mosaico en la pieza más nueva; después el lienzo se arrastra sin límite.
         if (!this._panInit) {
           this._panInit = true;
-          [this.state.px, this.state.py] = clampPan(mc.W, mc.H, VW, VH, 1e6, 1e6);
+          [this.state.px, this.state.py] = clampPan(mc.W, mc.H, VW, VH, Math.round(VW / 2 - mc.lay.ox), Math.round((VH - 20) / 2 - mc.lay.oy));
+          this._vx = this.state.px; this._vy = this.state.py;
         }
       }
     }
+    // Inercia: px/py es adonde va el lienzo; _vx/_vy, donde se ve. La pantalla se dibuja con lo que
+    // se ve y glide() lo acerca de a poco al destino.
+    const goal = name === 'Main' && this._vx != null ? [this.state.px, this.state.py] : null;
+    if (goal) { this.state.px = this._vx; this.state.py = this._vy; }
+    if (name === 'Main' && mc) this._vis = visibleCells(this, mc.lay.cells, window.innerWidth || 1440, window.innerHeight || 900);
     const vals = renderVals.call(this);
+    if (goal) { [this.state.px, this.state.py] = goal; glide(this); }
 
     // Apariencia → Idioma.
     if (this.ui) {
@@ -406,9 +419,11 @@ function patchClass(name, Component) {
     }
 
     if (name === 'Main' && mc && vals.tiles) {
+      tileAnim(this, vals.tiles, this._vis);
       vals.tiles.forEach((t, i) => {
-        t.delay = (parseFloat(t.delay) * 2).toFixed(2) + 's';
-        const c = mc.lay.cells[i];
+        const c = this._vis[i];
+        // El color de relleno va por pieza y no por posición en la lista (que cambia al arrastrar).
+        if (c && /^var\(--t\d\)$/.test(t.bg)) t.bg = 'var(--t' + (1 + (mc.lay.cells.indexOf(c) % 3)) + ')';
         // Misma leyenda que las piezas de un tablero (Archivo): etiquetas · tamaño · forma · resolución.
         if (c) t.meta = [this.tagsOf(c.it), this.shapeOf(c.it).lab].filter(Boolean).join(' · ');
         if (c && c.it.kind === 'text') t.tfs = fitText(c.it.text, t.w - 32, t.h - 28, 1.5);
@@ -422,7 +437,7 @@ function patchClass(name, Component) {
       });
     }
     if (name === 'Main' && INTRO) introVals(vals);
-    if (name === 'Main') leftDrag(this, vals);
+    if (name === 'Main') { leftDrag(this, vals); throwVals(this, vals); }
     if (vals.pe && vals.pe.onBoard) newBoardVals(this, vals.pe);
 
     if (name === 'Archivo' && vals.cards && this.curBoard) {
@@ -547,6 +562,97 @@ function leftDrag(inst, vals) {
     inst._ld = null;
     if (d && d.on) swallowClick();
     up(e);
+  };
+}
+
+// Mosaico con peso, como en Cosmos: el lienzo sigue al mouse (o a la rueda) con un poco de retraso
+// y, al soltarlo, sigue deslizándose un poco en la dirección en que venía.
+const GLIDE_MS = 110;    // cuánto tarda en alcanzar al mouse (constante de tiempo, en ms)
+const THROW_MS = 160;    // cuánto sigue deslizándose al soltar (velocidad × tiempo)
+const THROW_MAX = 700;   // tope del deslizamiento, en px
+const reduceMotion = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// Piezas a la vista (con VIS_MARGIN px de margen alrededor de la pantalla), según dónde se ve el
+// lienzo ahora (_vx/_vy). Mientras el lienzo se desliza, glide() vuelve a dibujar cada VIS_STEP px.
+const VIS_MARGIN = 500;
+const VIS_STEP = 200;
+const TILE_IN = '1s';       // fundido de las piezas que aparecen al arrastrar
+const TILE_STAGGER = 0.04;  // escalonado entre las que aparecen juntas, en s
+
+function visibleCells(inst, cells, VW, VH) {
+  const x = inst._vx, y = inst._vy;
+  inst._cull = [x, y];
+  return cells.filter((c) => c.x + x + c.w > -VIS_MARGIN && c.x + x < VW + VIS_MARGIN
+    && c.y + y + c.h > -VIS_MARGIN && c.y + y < VH + VIS_MARGIN);
+}
+
+// Animación de entrada de cada pieza. Al abrir, la del diseño (escalonada, al doble de lento). Las que
+// aparecen después (al arrastrar o al guardar algo nuevo) entran con un fundido más corto. Una pieza que
+// sigue a la vista conserva sus valores: si cambiaran, el navegador repetiría la animación.
+function tileAnim(inst, tiles, vis) {
+  const first = !inst._anim;
+  const prev = inst._anim || new Map();
+  const next = new Map();
+  let k = 0;
+  tiles.forEach((t, i) => {
+    const id = vis[i] && vis[i].it.id;
+    let a = prev.get(id);
+    if (!a) a = first
+      ? { delay: (parseFloat(t.delay) * 2).toFixed(2) + 's', dur: '1.6s' }
+      : { delay: Math.min(0.3, k++ * TILE_STAGGER).toFixed(2) + 's', dur: TILE_IN };
+    next.set(id, a);
+    Object.assign(t, a, { key: id });
+  });
+  inst._anim = next;
+}
+
+function glide(inst) {
+  if (inst._gl) return;
+  if (reduceMotion()) { inst._vx = inst.state.px; inst._vy = inst.state.py; return; }
+  if (Math.abs(inst.state.px - inst._vx) < 0.5 && Math.abs(inst.state.py - inst._vy) < 0.5) return;
+  let last = 0;
+  const step = (now) => {
+    const el = inst._world && inst._world.isConnected ? inst._world : (inst._world = document.querySelector('[data-world]'));
+    if (!el) { inst._gl = 0; return; }
+    const dt = last ? Math.min(64, now - last) : 16;
+    last = now;
+    const k = 1 - Math.exp(-dt / GLIDE_MS);
+    const dx = inst.state.px - inst._vx, dy = inst.state.py - inst._vy;
+    const done = Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5;
+    inst._vx = done ? inst.state.px : inst._vx + dx * k;
+    inst._vy = done ? inst.state.py : inst._vy + dy * k;
+    el.style.transform = 'translate3d(' + inst._vx.toFixed(2) + 'px,' + inst._vy.toFixed(2) + 'px,0)';
+    // Si se movió bastante desde el último dibujo, otras piezas pueden haber entrado a la vista.
+    if (!done && inst._cull && Math.hypot(inst._vx - inst._cull[0], inst._vy - inst._cull[1]) > VIS_STEP) inst.forceUpdate();
+    if (!done) { inst._gl = requestAnimationFrame(step); return; }
+    inst._gl = 0;
+    // Al llegar se vuelve a dibujar una vez, por si alguna pieza entró o salió de la pantalla.
+    inst.forceUpdate();
+  };
+  inst._gl = requestAnimationFrame(step);
+}
+
+// Registra la velocidad del arrastre y, al soltar, empuja el destino en esa dirección.
+function throwVals(inst, vals) {
+  const { move, up } = vals;
+  vals.move = (e) => {
+    if (inst.drag) {
+      const now = performance.now(), p = inst._tp;
+      if (p && now > p.t) {
+        const a = Math.min(1, (now - p.t) / 40); // promedio de los últimos ~40 ms
+        inst._tv = { x: (inst._tv ? inst._tv.x * (1 - a) : 0) + a * (e.clientX - p.x) / (now - p.t), y: (inst._tv ? inst._tv.y * (1 - a) : 0) + a * (e.clientY - p.y) / (now - p.t), t: now };
+      }
+      inst._tp = { x: e.clientX, y: e.clientY, t: now };
+    }
+    move(e);
+  };
+  vals.up = (e) => {
+    const v = inst.drag && inst._tv && performance.now() - inst._tv.t < 60 ? inst._tv : null;
+    inst._tp = inst._tv = null;
+    up(e);
+    if (!v || reduceMotion()) return;
+    const lim = (n) => Math.max(-THROW_MAX, Math.min(THROW_MAX, n * THROW_MS));
+    inst.setState({ px: inst.state.px + lim(v.x), py: inst.state.py + lim(v.y) });
   };
 }
 

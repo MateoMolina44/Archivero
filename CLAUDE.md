@@ -68,7 +68,9 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 - **Entrada:** buscador, botonera y carrete aparecen con un fundido de 1,4 s una sola vez por pantalla (`data-ui="done"` en `#app`); las piezas del mosaico entran en 1,6 s escalonadas.
 - **Buscador:** pastilla arriba con el texto "Buscar…" y brillo animado. Se expande en un panel: busca por nombre, nota, sitio, tablero, tipo, `#etiqueta` y color (selector propio con cuadro de saturación, barra de tono, hex y "+" para sumar colores). Recientes (textos), Colores recientes (cada uno se suma a la búsqueda) y lo guardado recientemente (cada miniatura abre su ficha).
 - **Principal – vista 2 (mosaico):**
-  - Lienzo infinito que se arrastra con el botón izquierdo o el del medio (rueda: vertical; Shift + rueda: horizontal). Un solo bloque que crece con las piezas, cada una una sola vez y sin deformarse, con 24 px entre piezas (`MOSAIC_GAP`) y esquinas de 5 px.
+  - Lienzo infinito que se arrastra con el botón izquierdo o el del medio (rueda: vertical; Shift + rueda: horizontal). El lienzo se mueve con peso, como en Cosmos: sigue al mouse o a la rueda con retraso y al soltarlo se desliza un poco (`glide`/`throwVals` en `patches.js`, constantes `GLIDE_MS`, `THROW_MS`, `THROW_MAX`). Un solo bloque que crece con las piezas, cada una una sola vez y sin deformarse, con 24 px entre piezas (`MOSAIC_GAP`) y esquinas de 5 px.
+  - Acomodo en espiral (`packMosaic` en `mosaic.js`): la pieza más nueva en el centro y cada una de las siguientes en el lugar libre más cercano, pegada a otra a 24 px exactos y prefiriendo rincones y huecos (cuantas más vecinas toca, mejor). Mantiene tamaños variados y forma real; si un hueco le queda chico, la pieza se achica hasta 60 % para cerrarlo. La vista arranca centrada en la pieza más nueva.
+  - Solo existen en la página las piezas a la vista, con 500 px de margen (`visibleCells`, `VIS_MARGIN`): las demás no se crean ni cargan su imagen. Al arrastrar se vuelve a calcular cada 200 px (`VIS_STEP`) y las que entran aparecen con un fundido de 1 s, escalonado (`tileAnim`). Al abrir, la entrada de siempre (1,6 s). Para que las que siguen a la vista no se recreen, cada pieza lleva `data-key` y el runtime (`morphKeyed` en `runtime.js`) reusa los elementos por clave. Mateo eligió esta opción frente a columnas o filas justificadas (sin huecos garantizados pero con tamaños iguales).
   - Spotify con su reproductor horizontal; textos con caja y letra según la cantidad de caracteres.
   - Pasar el mouse oscurece la pieza y muestra título y leyenda (etiquetas · tamaño · forma · resolución) abajo a la izquierda, igual que en un tablero (sin escritura letra por letra). **Tocar una pieza abre su ficha completa** (si se arrastró, no).
   - **Intro:** apagada por ahora (`INTRO = false` en `patches.js`). Está hecha en `intro.js`: un cajón 3D (el logo de Figma, frente con borde y tirador) gira mientras el contador sube a 100 %, la cámara se acerca y aparecen los mosaicos, con los colores del tema.
@@ -110,7 +112,7 @@ Archivero = librería personal de inspiraciones (web) + extensión de Chrome que
 ## Pendientes
 1. **Chrome Web Store:** sin publicar todavía (guía en `PUBLICAR_EN_CHROME.md`).
 2. **Intro:** decidir si vuelve el cajón 3D.
-3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; falta virtualizar si hay cientos de piezas.
+3. **Rendimiento:** hay miniaturas, `loading="lazy"` y videos que solo corren a la vista; el mosaico ya dibuja solo lo visible. Falta virtualizar Archivo (tableros con cientos de piezas).
 
 ## Versiones y releases
 - Cada versión: subir `version` en `extension/package.json` y `extension/public/manifest.json`, `npm run build`, commit y push.
