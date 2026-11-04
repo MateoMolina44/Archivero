@@ -66,10 +66,14 @@ export function packMosaic(entries, VW, VH, G) {
 
   // Escala máxima (<= 1) con la que una pieza w×h, que crece desde la esquina (ax, ay) hacia
   // (dx, dy) = (±1, ±1), entra sin acercarse a menos de G de ninguna otra.
-  // `around`: las piezas de la zona (near), buscadas una sola vez por cada pieza vecina.
+  // `around`: las piezas de una zona (zone), buscadas una sola vez por cada pieza vecina. Si el lugar
+  // se sale de esa zona, se buscan las piezas del lugar mismo (si no, podría pisar una que no ve).
+  const inside = (b, x1, y1, x2, y2) => x1 >= b[0] && y1 >= b[1] && x2 <= b[2] && y2 <= b[3];
   const fit = (ax, ay, dx, dy, w, h, around) => {
+    const x1 = dx > 0 ? ax : ax - w, y1 = dy > 0 ? ay : ay - h;
+    const list = inside(around.b, x1, y1, x1 + w, y1 + h) ? around : near(x1, y1, x1 + w, y1 + h);
     let s = 1;
-    for (const q of around) {
+    for (const q of list) {
       const ex1 = q.x - G, ex2 = q.x2 + G, ey1 = q.y - G, ey2 = q.y2 + G;
       const sx = dx > 0 ? (ax >= ex2 ? Infinity : ax < ex1 ? (ex1 - ax) / w : 0)
         : (ax <= ex1 ? Infinity : ax > ex2 ? (ax - ex2) / w : 0);
@@ -85,7 +89,7 @@ export function packMosaic(entries, VW, VH, G) {
   const ov = (a1, a2, b1, b2) => Math.max(0, Math.min(a2, b2) - Math.max(a1, b1));
   const contact = (x, y, x2, y2, around) => {
     let c = 0;
-    for (const q of around) {
+    for (const q of inside(around.b, x - G, y - G, x2 + G, y2 + G) ? around : near(x, y, x2, y2)) {
       if (Math.abs(q.x - G - x2) < 1 || Math.abs(x - G - q.x2) < 1) c += ov(y, y2, q.y, q.y2);
       if (Math.abs(q.y - G - y2) < 1 || Math.abs(y - G - q.y2) < 1) c += ov(x, x2, q.x, q.x2);
     }
@@ -94,7 +98,12 @@ export function packMosaic(entries, VW, VH, G) {
 
   // Lugares posibles junto a la pieza r (y en los rincones que forma con sus vecinas). Cada uno es
   // una esquina de anclaje y hacia dónde crece la pieza desde ella.
-  const zone = (r, w, h) => near(r.x - w - 2 * G, r.y - 2 * h - 2 * G, r.x2 + w + 2 * G, r.y2 + 2 * h + 2 * G);
+  const zone = (r, w, h) => {
+    const b = [r.x - w - 2 * G, r.y - 2 * h - 2 * G, r.x2 + w + 2 * G, r.y2 + 2 * h + 2 * G];
+    const list = near(b[0], b[1], b[2], b[3]);
+    list.b = b;
+    return list;
+  };
   const spots = (r, w, h, around) => {
     const xs = [[r.x2 + G, 1], [r.x - G, -1]];      // al lado
     const ys = [[r.y2 + G, 1], [r.y - G, -1]];      // arriba / abajo

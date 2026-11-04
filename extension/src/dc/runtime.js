@@ -181,8 +181,21 @@ function morph(parent, kids) {
 }
 
 function morphKeyed(parent, kids) {
+  // Primero se sacan los que ya no están: así los que quedan no se mueven de lugar (mover un elemento
+  // en el DOM reinicia sus animaciones CSS, y la de entrada se repetiría).
+  // Los espacios en blanco entre elementos de la plantilla también se descartan: quedarían desfasados
+  // cuando sale un elemento y obligarían a mover los siguientes.
+  const blank = (n) => (n.t === '#t' ? !n.v.trim() : n.nodeType === 3 && !n.textContent.trim());
+  kids = kids.filter((v) => !blank(v));
+  const want = new Set(kids.map(keyOf).filter((k) => k != null));
   const old = new Map();
-  for (const c of parent.childNodes) if (keyOf(c) != null) old.set(keyOf(c), c);
+  for (const c of [...parent.childNodes]) {
+    if (blank(c)) { parent.removeChild(c); continue; }
+    const k = keyOf(c);
+    if (k == null) continue;
+    if (want.has(k) && !old.has(k)) old.set(k, c);
+    else parent.removeChild(c);
+  }
   kids.forEach((v, i) => {
     const k = keyOf(v);
     const cur = parent.childNodes[i];
