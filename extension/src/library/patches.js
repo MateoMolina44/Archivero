@@ -407,7 +407,13 @@ function patchClass(name, Component) {
     searchVals(this, name, vals);
 
     // Ficha completa: botón "Ir al sitio" cuando la pieza tiene la dirección de origen.
-    if (vals.pe) { vals.pe.goHref = vals.pe.url || ''; vals.pe.goOn = /^https?:\/\//.test(vals.pe.goHref); }
+    // "Abrir sitio" también: solo direcciones http(s), nunca javascript: ni data: (de una copia importada
+    // o de un enlace guardado con el clic derecho).
+    if (vals.pe) {
+      vals.pe.goHref = vals.pe.url || '';
+      vals.pe.goOn = /^https?:\/\//i.test(vals.pe.goHref);
+      if (vals.pe.href && !/^https?:\/\//i.test(vals.pe.href)) vals.pe.href = '#';
+    }
 
     // Agregar pieza: la pestaña elegida en blanco con texto oscuro; las otras con texto blanco.
     if (vals.add && vals.add.tabs) vals.add.tabs.forEach((t) => { if (String(t.on) !== 'true') t.bg = 'transparent;color:#fff;border:1px solid rgba(255,255,255,.3)'; });

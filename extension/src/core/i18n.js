@@ -70,6 +70,8 @@ Sincronizar en la nube|Sync to the cloud|Sincronizar na nuvem
 Sincronizar ahora|Sync now|Sincronizar agora
 Iniciar sesión con Google|Sign in with Google|Entrar com o Google
 Cerrar sesión|Sign out|Sair
+¿Borrar también la librería de este navegador? Lo que ya se sincronizó sigue en tu cuenta. Si esta computadora es compartida, conviene borrarla.|Also delete the library from this browser? Everything already synced stays in your account. If this computer is shared, you should delete it.|Apagar também a biblioteca deste navegador? O que já foi sincronizado continua na sua conta. Se este computador é compartilhado, é melhor apagar.
+La librería de este navegador es de otra cuenta. ¿Sumarla a la cuenta con la que entraste?|The library in this browser belongs to another account. Add it to the account you signed in with?|A biblioteca deste navegador é de outra conta. Adicioná-la à conta com que você entrou?
 Sincronizando…|Syncing…|Sincronizando…
 Iniciá sesión con Google para usar tu librería en cualquier computadora.|Sign in with Google to use your library on any computer.|Entre com o Google para usar sua biblioteca em qualquer computador.
 Se sincronizan tus piezas, imágenes, tableros, notas, reglas y apariencia entre la extensión, la web y tus otras computadoras.|Your pieces, images, boards, notes, rules and appearance sync between the extension, the web and your other computers.|Suas peças, imagens, quadros, notas, regras e aparência são sincronizadas entre a extensão, a web e seus outros computadores.

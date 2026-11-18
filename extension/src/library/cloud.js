@@ -11,6 +11,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { openDB, mediaGet } from '../core/db.js';
 import * as settings from '../core/settings.js';
+import { translate, uiLang } from '../core/i18n.js';
 import { notesBackup, restoreNotes, NOTES_KEY } from './notes.js';
 
 const SUPABASE_URL = 'https://dwtjnftbfdcswrojnzec.supabase.co';
@@ -18,6 +19,8 @@ const SUPABASE_URL = 'https://dwtjnftbfdcswrojnzec.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_EcPpVIWQA4FivRirPsAPlA_UCtm1Ll3';
 const STATE_KEY = 'archivero.cloud.v1';
 const BACK_KEY = 'archivero.cloud.back';
+// Cuenta dueña de la librería de este navegador (no se borra al cerrar sesión).
+const OWNER_KEY = 'archivero.cloud.owner';
 const MAX_FILE = 50 * 1024 * 1024; // límite por archivo del plan gratis
 const OVERLAP = 60 * 1000; // se vuelve a pedir el último minuto, por si una escritura llegó tarde
 
@@ -94,9 +97,53 @@ async function signIn() {
 }
 
 async function signOut() {
+  // Si la librería queda en el navegador, la próxima cuenta que entre acá la subiría a la suya.
+  // Por eso se ofrece borrarla (lo sincronizado sigue en la nube de esta cuenta).
+  const wipe = window.confirm(t('¿Borrar también la librería de este navegador? Lo que ya se sincronizó sigue en tu cuenta. Si esta computadora es compartida, conviene borrarla.'));
   await sb.auth.signOut().catch(() => {});
   try { localStorage.removeItem(STATE_KEY); } catch { /* sin acceso */ }
   set({ user: null, phase: 'idle', msg: '', last: 0 });
+  if (wipe) await wipeLocal();
+}
+
+const t = (s) => translate(s, uiLang());
+
+// Borra la librería, los medios y las notas de este navegador, y recarga.
+async function wipeLocal() {
+  try {
+    localStorage.removeItem('archivero.lib.v1');
+    localStorage.removeItem('archivero.search.v1');
+    localStorage.removeItem(OWNER_KEY);
+  } catch { /* sin acceso */ }
+  try {
+    const db = await openDB();
+    await new Promise((res) => {
+      const tx = db.transaction(['media', 'inbox'], 'readwrite');
+      tx.objectStore('media').clear();
+      tx.objectStore('inbox').clear();
+      tx.oncomplete = tx.onerror = tx.onabort = () => res();
+    });
+  } catch { /* sin base */ }
+  location.reload();
+}
+
+// Si la librería de este navegador es de otra cuenta, se pregunta antes de juntarla con la nueva.
+// Devuelve false si no hay que sincronizar (la persona prefirió no mezclarlas: se cierra la sesión).
+async function checkOwner(user) {
+  let owner = null;
+  try { owner = localStorage.getItem(OWNER_KEY); } catch { /* sin acceso */ }
+  const L = inst.lib();
+  const hasLocal = L.items.length > 0 || notesBackup().notes.length > 0;
+  if (owner && owner !== user.id && hasLocal) {
+    const ok = window.confirm(t('La librería de este navegador es de otra cuenta. ¿Sumarla a la cuenta con la que entraste?') + '\n\n' + (user.email || ''));
+    if (!ok) {
+      await sb.auth.signOut().catch(() => {});
+      set({ user: null, phase: 'idle', msg: '', last: 0 });
+      return false;
+    }
+  }
+  try { localStorage.setItem(OWNER_KEY, user.id); } catch { /* sin acceso */ }
+  return true;
 }
 
 // ---------- sincronización ----------
@@ -139,6 +186,7 @@ function saveState(s) {
 
 async function syncOnce() {
   if (!inst || inst._dead || !inst.lib || !status.user) return;
+  if (!(await checkOwner(status.user))) return;
   const st = loadState(status.user.id);
   set({ phase: 'sync', msg: 'Sincronizando…' });
 

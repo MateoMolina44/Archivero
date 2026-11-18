@@ -2,5 +2,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "cd extension && npm ci",
   "buildCommand": "cd extension && npm run build:web",
-  "outputDirectory": "extension/dist-web"
+  "outputDirectory": "extension/dist-web",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' https: http: data: blob:; media-src 'self' https: data: blob:; connect-src 'self' https: data: blob: wss://dwtjnftbfdcswrojnzec.supabase.co; frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://open.spotify.com https://platform.twitter.com https://www.tiktok.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    }
+  ]
 }
